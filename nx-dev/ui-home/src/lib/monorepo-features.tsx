@@ -1,19 +1,19 @@
 import cx from 'classnames';
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 const featureItems: {
   classNames: string;
   link: string;
   subTitle: string;
-  svg: ReactComponentElement<any>;
+  svg: JSX.Element;
   title: string;
 }[] = [
   {
     classNames: 'bg-pink-500',
-    link: '/using-nx/affected',
+    link: '/concepts/affected',
     title: 'Smart rebuilds',
     subTitle: 'Nx only rebuilds and retests what is affected by your change.',
     svg: (
@@ -35,7 +35,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-green-nx-base',
-    link: '/using-nx/mental-model#the-project-graph',
+    link: '/concepts/mental-model#the-project-graph',
     title: 'Project graph',
     subTitle:
       'Nx analyzes your workspace to improve performance and developer experience.',
@@ -58,7 +58,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-yellow-500',
-    link: '/using-nx/dte',
+    link: '/core-features/distribute-task-execution',
     title: 'Distributed task execution',
     subTitle:
       'Nx distributes any command across multiple machines without any configuration.',
@@ -81,7 +81,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-blue-500',
-    link: '/using-nx/caching',
+    link: '/concepts/how-caching-works',
     title: 'Computation caching',
     subTitle: 'Nx never rebuilds or tests the same code twice.',
     svg: (
@@ -103,7 +103,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-purple-nx-base',
-    link: '/structure/monorepo-tags',
+    link: '/core-features/enforce-project-boundaries',
     title: 'Easy code sharing',
     subTitle: 'Nx simplifies extracting and refactoring shared libraries.',
     svg: (
@@ -125,7 +125,7 @@ const featureItems: {
   },
   {
     classNames: 'bg-red-500',
-    link: '/structure/monorepo-tags',
+    link: '/core-features/enforce-project-boundaries',
     title: 'Ownership management',
     subTitle:
       'Nx statically enforces the separation of shared and app-specific code.',
@@ -148,7 +148,7 @@ const featureItems: {
   },
 ];
 
-export function MonorepoFeatures(): ReactComponentElement<any> {
+export function MonorepoFeatures(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -264,5 +264,3 @@ export function MonorepoFeatures(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default MonorepoFeatures;

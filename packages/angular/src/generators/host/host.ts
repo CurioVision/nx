@@ -12,6 +12,8 @@ import remoteGenerator from '../remote/remote';
 import { normalizeProjectName } from '../utils/project';
 import * as ts from 'typescript';
 import { addRoute } from '../../utils/nx-devkit/ast-utils';
+import { addStandaloneRoute } from '../../utils/nx-devkit/standalone-utils';
+import { setupMf } from '../setup-mf/setup-mf';
 
 export default async function host(tree: Tree, options: Schema) {
   const projects = getProjects(tree);
@@ -29,23 +31,34 @@ export default async function host(tree: Tree, options: Schema) {
     });
   }
 
+  const appName = normalizeProjectName(options.name, options.directory);
+
   const installTask = await applicationGenerator(tree, {
     ...options,
-    mfe: true,
-    mfeType: 'host',
     routing: true,
-    remotes: remotesToIntegrate ?? [],
     port: 4200,
-    federationType: options.dynamic ? 'dynamic' : 'static',
     skipFormat: true,
+  });
+
+  await setupMf(tree, {
+    appName,
+    mfType: 'host',
+    routing: true,
+    port: 4200,
+    remotes: remotesToIntegrate ?? [],
+    federationType: options.dynamic ? 'dynamic' : 'static',
+    skipPackageJson: options.skipPackageJson,
+    skipFormat: true,
+    e2eProjectName: `${appName}-e2e`,
   });
 
   for (const remote of remotesToGenerate) {
     await remoteGenerator(tree, {
       ...options,
       name: remote,
-      host: normalizeProjectName(options.name, options.directory),
+      host: appName,
       skipFormat: true,
+      standalone: options.standalone,
     });
   }
 
@@ -86,30 +99,47 @@ ${remoteRoutes}
 `
   );
 
-  const pathToHostAppModule = joinPathFragments(
+  const pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
-    'app/app.module.ts'
+    options.standalone ? 'bootstrap.ts' : 'app/app.module.ts'
   );
-  const hostAppModule = tree.read(pathToHostAppModule, 'utf-8');
+  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
 
-  if (!hostAppModule.includes('RouterModule.forRoot(')) {
+  if (!hostRootRoutingFile.includes('RouterModule.forRoot(')) {
     return;
   }
 
   let sourceFile = ts.createSourceFile(
-    pathToHostAppModule,
-    hostAppModule,
+    pathToHostRootRoutingFile,
+    hostRootRoutingFile,
     ts.ScriptTarget.Latest,
     true
   );
 
-  sourceFile = addRoute(
-    tree,
-    pathToHostAppModule,
-    sourceFile,
-    `{
+  if (hostRootRoutingFile.includes('@NgModule')) {
+    sourceFile = addRoute(
+      tree,
+      pathToHostRootRoutingFile,
+      sourceFile,
+      `{
          path: '', 
          component: NxWelcomeComponent
      }`
-  );
+    );
+  } else {
+    addStandaloneRoute(
+      tree,
+      pathToHostRootRoutingFile,
+      `{
+      path: '',
+      component: NxWelcomeComponent
+    }`
+    );
+
+    tree.write(
+      pathToHostRootRoutingFile,
+      `import { NxWelcomeComponent } from './app/nx-welcome.component';
+    ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
+    );
+  }
 }

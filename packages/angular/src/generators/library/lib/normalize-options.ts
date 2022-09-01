@@ -2,12 +2,13 @@ import {
   getWorkspaceLayout,
   getWorkspacePath,
   joinPathFragments,
+  names,
   readJson,
   Tree,
 } from '@nrwl/devkit';
+import { getImportPath } from 'nx/src/utils/path';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
-import { names } from '@nrwl/devkit';
 import { Linter } from '@nrwl/linter';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { normalizePrefix } from '../../utils/project';
@@ -29,7 +30,7 @@ export function normalizeOptions(
     compilationMode: schema.publishable
       ? 'partial'
       : schema.compilationMode ?? 'full',
-    skipModule: schema.skipModule ?? false,
+    skipModule: schema.skipModule || schema.standalone,
     ...schema,
   };
 
@@ -55,7 +56,8 @@ export function normalizeOptions(
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
-  const importPath = options.importPath || `@${npmScope}/${projectDirectory}`;
+  const importPath =
+    options.importPath || getImportPath(npmScope, projectDirectory);
 
   // Determine the roots where @schematics/angular will place the projects
   // This might not be where the projects actually end up
@@ -83,5 +85,6 @@ export function normalizeOptions(
     fileName,
     importPath,
     ngCliSchematicLibRoot,
+    standaloneComponentName: `${names(name).className}Component`,
   };
 }

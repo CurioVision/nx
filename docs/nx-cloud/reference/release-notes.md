@@ -1,12 +1,61 @@
-# `@nrwl/nx-cloud`
+# `@nrwl/nx-cloud` - Release notes
+
+## 14.3.0
+
+- Fix: Resolve issue where sometimes cache hits would be reported as misses when paired with Nx 13.0-13.5
+- Fix: Correctly infer NX_BRANCH while running in Gitlab CI
+
+## 14.2.0
+
+- Feat: Add `NX_CLOUD_SILENT_RECORD` environment variable for use with `nx-cloud record`
+- Feat: Add `NX_CLOUD_AGENT_TIMEOUT_MS` environment variable to configure task timeouts
+
+## 14.1.2
+
+- Fix: Provider nicer failure message when version of Nx is incompatible with `@nrwl/nx-cloud`
+- Fix: Use Nx task graph if provided
+
+## 14.1.1
+
+- Fix: Handle **overrides_unparsed** property for nx:run-commands executor
+
+## 14.1.0
+
+- Fix: Gracefully handle errors with corrupted tarballs
+- Fix: Resolve issue where tasks run with read-only DTE would cause 404s on artifact retrieval
+- Feat: Allow specifying Nx Cloud installation source through generator
+
+## 14.0.5
+
+- Fix: Workspace name for new Nx Cloud workspaces is pulled from `package.json` instead of `nx.json`
+- Fix: `@nrwl/nx-cloud` can be run from directories other than workspace root
+- Fix: Correctly infer `NX_BRANCH` and `NX_RUN_GROUP` from Jenkins
+- Fix: Ignore errors related to excess whitespace in tarballs
+
+## 14.0.3
+
+- Fix: Enable caching for all inner commands
+
+## 14.0.2
+
+- Fix: Remove dependency on `@nrwl/devkit` for init generator
+
+## 14.0.1
+
+- Fix: Correctly infer `NX_BRANCH` and `NX_RUN_GROUP` from Vercel
+
+## 14.0.0
+
+- Feat: Nx 14 Compatibility
+- Fix: Exit with status code of child process when recording commands with `nx-cloud record`
 
 ## 13.3.1
 
-- Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.app/docs/record-non-nx-commands for more information.
+- Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.dev/nx-cloud/set-up/record-commands for more information.
 
 ## 13.2.1
 
-- Fix: Newer version of chaulk was required, so the package didn't work with older versions of Nx.
+- Fix: Newer version of chalk was required, so the package didn't work with older versions of Nx.
 - Feat: Prepare the package to work with Nx 13.10.0
 
 ## 13.0.3
@@ -41,7 +90,82 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 - Fix: DTE could get stuck when trying to execute tasks with different configurations
 
-# Nx Private Cloud
+# Docker Containers
+
+## 05-08-2022T15-42-20
+
+- Fix: issue with retrieving hashes during reads
+- Feat: added route to display container version at `/version`
+- Misc: forward api errors to stderr so k8s clusters can process them better
+
+## 02-08-2022T16-11-36
+
+- Note: The version naming scheme for the containers was changed to better track date/time of releases and to support embedding of the version inside the web UI
+- Feat: view the container version under the `/errors` route
+- Feat: BitBucket login (note: does not support self-hosted instances of BitBucket Server)
+- Feat: New system-ui font scheme
+- Fix: branch screen sorting performance improvements
+
+## 2.4.11
+
+- Fixes an intermittent container start-up issue when running a self-contained Mongo instance
+- Fixes an issue with the self-hosted file-server where it would fail to create the initial directories
+
+## 2.4.10
+
+- Fix an issue with the admin password not being set correctly
+
+## 2.4.9
+
+- Align all NxCloud images to this version. No new fixes or features included.
+
+## 2.4.8
+
+{% callout type="caution" title="IMPORTANT" %}
+The default container mode has changed from `COMMUNITY` to `ENTERPRISE`. If you are running a Community version of the container, you will need to make sure the `NX_CLOUD_MODE=private-community` is explicitly set (otherwise your container will fail to start-up).
+{% /callout %}
+
+- Fix: Web app performance improvements
+- Fix: issue with GitHub logged in admins not being able to download logs
+- Fix: issue with billing page when multiple access tokens were attached to the same org
+- Fix: multiple Mongo DBs used to be created if a default DB was not provided in the connection string. Now it always defaults to the provided `NX_CLOUD_MONGO_DB_NAME`
+
+## 2.4.7
+
+- Misc: performance improvements to DB indexes
+- Misc: improvements to hash differ to use regex
+- Misc: export more collections for debug purposes (workspaces and organizations)
+
+## 2.4.6
+
+- Fix: issue with navigating to organizations/workspaces in the web app
+
+## 2.4.5
+
+- Feat: filters to branch and run list pages
+- Fix: improved `MD5` cache artifact archiving
+- Misc: various UI and UX improvements to the NxCloud dashboards
+
+## 2.4.4
+
+- Fix: Missing artefact retrieval error when using read-tokens
+- Fix: Performance improvements to the branch page and run groups sorting
+- Fix: better handling of artefact `.tar` archiving
+
+## 2.4.3
+
+- Feat: Billing page messaging improvements
+- Fix: runs sorting on branch page
+
+## 2.4.2
+
+- Feat: DTE post-run report
+- Feat: Hash Detail tool flow improvements
+
+## 2.4.1
+
+- Feat: Admins can now easily export debug info for error investigation
+- Fix: branch screen run group sorting
 
 ## 2.4.0
 
@@ -50,7 +174,7 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 - Feat: show message on branch page if workspace is unclaimed
 - Fix: Agent out of memory warning
 - Feat: cache inner runs
-- Fix: include correct github workflows path
+- Fix: include correct GitHub workflows path
 - Fix: default to most recent run group on branch page
 - Fix: handle DTEs with no tasks
 - Fix: await process checkout sessions
@@ -62,7 +186,7 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 ## 2.3.0
 
-- Feat: Github Integration - no token is now necessary in "`nx.json`" for the Github integration to work (you still need to provide as an env var for caching to work). To connect your workspace to Github without an access token in "`nx.json`" just pass in the "`NX_CLOUD_INTEGRATION_DEFAULT_WORKSPACE_ID=<your-workspace-id>`" env var
+- Feat: GitHub Integration - no token is now necessary in "`nx.json`" for the GitHub integration to work (you still need to provide as an env var for caching to work). To connect your workspace to GitHub without an access token in "`nx.json`" just pass in the "`NX_CLOUD_INTEGRATION_DEFAULT_WORKSPACE_ID=<your-workspace-id>`" env var
 - Misc: better error handling (report less false positives)
 - Fix: Scheduled tasks locking
 
@@ -129,8 +253,8 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 ## 2.2
 
-- [Nx Private Cloud 2.2](https://blog.nrwl.io/%EF%B8%8F-nx-cloud-2-2-%EF%B8%8F-b7656ed5ce7c)
+- [Nx Cloud 2.2](https://blog.nrwl.io/%EF%B8%8F-nx-cloud-2-2-%EF%B8%8F-b7656ed5ce7c)
 
 ## 2.0
 
-- [Overview of Nx Private Cloud 2.0](https://blog.nrwl.io/introducing-nx-cloud-2-0-f1e5c2002a65)
+- [Overview of Nx Cloud 2.0](https://blog.nrwl.io/introducing-nx-cloud-2-0-f1e5c2002a65)

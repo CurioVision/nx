@@ -1,15 +1,25 @@
 import { DocSearchModal, useDocSearchKeyboardEvents } from '@docsearch/react';
+import {
+  InternalDocSearchHit,
+  StoredDocSearchHit,
+} from '@docsearch/react/dist/esm/types';
 import { SearchIcon } from '@heroicons/react/solid';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 const ACTION_KEY_DEFAULT = ['Ctrl ', 'Control'];
 const ACTION_KEY_APPLE = ['⌘', 'Command'];
 
-function Hit({ hit, children }) {
+function Hit({
+  hit,
+  children,
+}: {
+  hit: InternalDocSearchHit | StoredDocSearchHit;
+  children: ReactNode;
+}): JSX.Element {
   return (
     <Link href={hit.url}>
       <a>{children}</a>
@@ -17,7 +27,7 @@ function Hit({ hit, children }) {
   );
 }
 
-export function AlgoliaSearch() {
+export function AlgoliaSearch(): JSX.Element {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -33,9 +43,9 @@ export function AlgoliaSearch() {
   }, [setIsOpen]);
 
   const handleInput = useCallback(
-    (e) => {
+    (event: KeyboardEvent) => {
       setIsOpen(true);
-      setInitialQuery(e.key);
+      setInitialQuery(event.key);
     },
     [setIsOpen, setInitialQuery]
   );
@@ -64,7 +74,7 @@ export function AlgoliaSearch() {
       <Head>
         <link
           rel="preconnect"
-          href="https://BH4D9OD16A-dsn.algolia.net"
+          href="https://PCTGM1JTQL-dsn.algolia.net"
           crossOrigin="true"
         />
       </Head>
@@ -74,8 +84,8 @@ export function AlgoliaSearch() {
         onClick={handleOpen}
         className="flex w-full items-center rounded-md py-1.5 pl-2 pr-3 text-sm leading-6 text-slate-300 ring-1 ring-slate-600 transition hover:text-slate-200 hover:ring-slate-500"
       >
-        <SearchIcon className="mr-3 h-4 w-4 flex-none" />
-        <span className="mx-3">
+        <SearchIcon className="h-4 w-4 flex-none md:mr-3" />
+        <span className="mx-3 hidden lg:inline-flex">
           <span className="hidden lg:inline">Quick </span>search
         </span>
         <span

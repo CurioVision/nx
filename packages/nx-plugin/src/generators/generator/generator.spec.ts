@@ -10,7 +10,7 @@ describe('NxPlugin Generator Generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace(2);
+    tree = createTreeWithEmptyWorkspace();
     await pluginGenerator(tree, {
       name: projectName,
     } as any);
@@ -57,6 +57,36 @@ describe('NxPlugin Generator Generator', () => {
     );
     expect(generatorJson.generators['my-generator'].description).toEqual(
       'my-generator description'
+    );
+  });
+
+  it('should update generators.json with the same path as where the generator files folder is located', async () => {
+    const generatorName = 'myGenerator';
+    const generatorFileName = 'my-generator';
+
+    await generatorGenerator(tree, {
+      project: projectName,
+      name: generatorName,
+      description: 'my-generator description',
+      unitTestRunner: 'jest',
+    });
+
+    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+
+    expect(
+      tree.exists(
+        `libs/my-plugin/src/generators/${generatorFileName}/schema.d.ts`
+      )
+    ).toBeTruthy();
+
+    expect(generatorJson.generators[generatorName].factory).toEqual(
+      `./src/generators/${generatorFileName}/generator`
+    );
+    expect(generatorJson.generators[generatorName].schema).toEqual(
+      `./src/generators/${generatorFileName}/schema.json`
+    );
+    expect(generatorJson.generators[generatorName].description).toEqual(
+      `${generatorFileName} description`
     );
   });
 

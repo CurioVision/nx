@@ -1,5 +1,5 @@
-import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 import update from './add-project-root-metro-config-14-0-0';
 
@@ -7,7 +7,7 @@ describe('Add projectRoot option in metro.config.js', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(tree, 'products', {
       root: 'apps/products',
       sourceRoot: 'apps/products/src',
@@ -22,7 +22,7 @@ describe('Add projectRoot option in metro.config.js', () => {
     });
   });
 
-  it(`should udpate metro.config.js and add key projectRoot`, async () => {
+  it(`should update metro.config.js and add key projectRoot`, async () => {
     tree.write(
       'apps/products/metro.config.js',
       `

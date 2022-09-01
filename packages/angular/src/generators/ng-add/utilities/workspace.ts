@@ -47,9 +47,10 @@ export function createNxJson(
   setWorkspaceLayoutAsNewProjectRoot: boolean = false
 ): void {
   const { newProjectRoot = '' } = readJson(tree, 'angular.json');
+  const { npmScope } = options;
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-    npmScope: options.npmScope,
+    ...(npmScope ? { npmScope } : {}),
     affected: {
       defaultBase: options.defaultBase ?? deduceDefaultBase(),
     },
@@ -68,13 +69,8 @@ export function createNxJson(
         },
       },
     },
-    targetDependencies: {
-      build: [
-        {
-          target: 'build',
-          projects: 'dependencies',
-        },
-      ],
+    targetDefaults: {
+      build: { dependsOn: ['^build'] },
     },
     workspaceLayout: setWorkspaceLayoutAsNewProjectRoot
       ? { appsDir: newProjectRoot, libsDir: newProjectRoot }
@@ -167,7 +163,8 @@ export function updatePackageJson(tree: Tree): void {
 
 export function updateRootEsLintConfig(
   tree: Tree,
-  existingEsLintConfig: any | undefined
+  existingEsLintConfig: any | undefined,
+  unitTestRunner?: string
 ): void {
   if (tree.exists('.eslintrc.json')) {
     /**
@@ -179,7 +176,7 @@ export function updateRootEsLintConfig(
     tree.delete('.eslintrc.json');
   }
 
-  lintInitGenerator(tree, { linter: Linter.EsLint });
+  lintInitGenerator(tree, { linter: Linter.EsLint, unitTestRunner });
 
   if (!existingEsLintConfig) {
     // There was no eslint config in the root, so we keep the generated one as-is.

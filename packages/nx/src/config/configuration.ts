@@ -7,6 +7,10 @@ export function readNxJson(): NxJsonConfiguration {
   return new Workspaces(workspaceRoot).readNxJson();
 }
 
+// TODO(v16): Remove this
+/**
+ * @deprecated Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
+ */
 export function readAllWorkspaceConfiguration(): ProjectsConfigurations &
   NxJsonConfiguration {
   return new Workspaces(workspaceRoot).readWorkspaceConfiguration();

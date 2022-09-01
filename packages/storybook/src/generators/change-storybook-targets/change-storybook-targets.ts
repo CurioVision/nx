@@ -9,7 +9,7 @@ import {
   Target,
   convertNxGenerator,
 } from '@nrwl/devkit';
-import { findStorybookAndBuildTargets } from '../../utils/utilities';
+import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
 
 export async function changeStorybookTargetsGenerator(tree: Tree) {
   let changesMade = false;
@@ -17,8 +17,8 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
   const projects = getProjects(tree);
   [...projects.entries()].forEach(([projectName, projectConfiguration]) => {
     changesMade = false;
-    const { storybookBuildTarget, storybookTarget, buildTarget } =
-      findStorybookAndBuildTargets(projectConfiguration.targets);
+    const { storybookBuildTarget, storybookTarget, ngBuildTarget } =
+      findStorybookAndBuildTargetsAndCompiler(projectConfiguration.targets);
     if (
       projectName &&
       storybookTarget &&
@@ -29,18 +29,24 @@ export async function changeStorybookTargetsGenerator(tree: Tree) {
         projectConfiguration,
         storybookTarget,
         projectName,
-        buildTarget,
+        ngBuildTarget,
         storybookBuildTarget
       );
       changesMade = true;
       changesMadeToAtLeastOne = true;
-      projectConfiguration.targets[storybookBuildTarget] =
-        updateStorybookBuildTarget(
-          projectConfiguration,
-          projectName,
-          buildTarget,
-          storybookBuildTarget
+      if (storybookBuildTarget) {
+        projectConfiguration.targets[storybookBuildTarget] =
+          updateStorybookBuildTarget(
+            projectConfiguration,
+            projectName,
+            ngBuildTarget,
+            storybookBuildTarget
+          );
+      } else {
+        logger.info(
+          `Project ${projectName} does not have a build target configured for Storybook.`
         );
+      }
     } else {
       logger.warn(`Could not find a Storybook target for ${projectName}.`);
     }
@@ -62,7 +68,8 @@ function updateStorybookTarget(
   storybookBuildTarget: string
 ): TargetConfiguration {
   const oldStorybookTargetConfig: TargetConfiguration =
-    projectConfiguration?.targets?.[storybookTarget];
+    projectConfiguration.targets[storybookTarget];
+
   const newStorybookTargetConfig: TargetConfiguration = {
     executor: '@storybook/angular:start-storybook',
     options: {
@@ -109,7 +116,7 @@ function updateStorybookBuildTarget(
   storybookBuildTarget: string
 ): TargetConfiguration {
   const oldStorybookBuildTargetConfig: TargetConfiguration =
-    projectConfiguration?.targets?.[storybookBuildTarget];
+    projectConfiguration.targets[storybookBuildTarget];
   const newStorybookBuildTargetConfig: TargetConfiguration = {
     executor: '@storybook/angular:build-storybook',
     outputs: oldStorybookBuildTargetConfig.outputs,

@@ -34,12 +34,12 @@ To start with, we need to create a new Nx Workspace. We can do this easily with:
 
 ```bash
 # Npm
-npx create-nx-workspace ng-mfe
+npx create-nx-workspace ng-mf
 ```
 
 ```bash
 # Yarn
-yarn create nx-workspace ng-mfe --packageManager=yarn
+yarn create nx-workspace ng-mf --packageManager=yarn
 ```
 
 You'll be prompted for a preset. We recommend selecting `empty` as it will allow you finer control over your workspace configuration.
@@ -50,7 +50,9 @@ You'll also be prompted if you would like to setup Nx Cloud. For this tutorial s
 
 To add Angular-related features to our newly created monorepo we need to install the Angular Plugin. Again, this is pretty easy to do:
 
-_**NOTE:** Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mfe`_
+{% callout type="warning" title="Be at the root" %}
+Check that you are now at the root of your monorepo in your terminal. If not, run `cd ng-mf`.
+{% /callout %}
 
 ```bash
 # Npm
@@ -94,9 +96,13 @@ npx nx g @nrwl/angular:remote login --host=dashboard
 yarn nx g @nrwl/angular:remote login --host=dashboard
 ```
 
-_**Note:** We provided `--host=dashboard` as an option. This tells the generator that this remote application will be consumed by the Dashboard application. The generator will automatically link these two applications together in the `module-federation.config.js` that gets used in the `webpack.config.js`._
+{% callout type="note" title="--host" %}
+We provided `--host=dashboard` as an option. This tells the generator that this remote application will be consumed by the Dashboard application. The generator will automatically link these two applications together in the `module-federation.config.js` that gets used in the `webpack.config.js`.\_
+{% /callout %}
 
-_**Note**: The `RemoteEntryModule` generated will be imported in `app.module.ts` file, however, it is not used in the `AppModule` itself. This is to allow TS to find the Module during compilation, allowing it to be included in the built bundle. This is required for the Module Federation Plugin to expose the Module correctly. You can choose to import the `RemoteEntryModule` in the `AppModule` if you wish, however, it is not necessary._
+{% callout type="note" title="More details" %}
+The `RemoteEntryModule` generated will be imported in `app.module.ts` file, however, it is not used in the `AppModule` itself. This is to allow TS to find the Module during compilation, allowing it to be included in the built bundle. This is required for the Module Federation Plugin to expose the Module correctly. You can choose to import the `RemoteEntryModule` in the `AppModule` if you wish, however, it is not necessary.\_
+{% /callout %}
 
 ## What was generated?
 
@@ -230,9 +236,9 @@ Next we want to set up our `entry.component.ts` file so that it renders a login 
 
 ```ts
 import { Component } from '@angular/core';
-import { UserService } from '@ng-mfe/shared/data-access-user';
+import { UserService } from '@ng-mf/shared/data-access-user';
 @Component({
-  selector: 'ng-mfe-login-entry',
+  selector: 'ng-mf-login-entry',
   template: `
     <div class="login-app">
       <form class="login-form" (ngSubmit)="login()">
@@ -281,7 +287,9 @@ export class RemoteEntryComponent {
 }
 ```
 
-_**Note:** This could be improved with error handling etc. but for the purposes of this tutorial, we'll keep it simple._
+{% callout type="note" title="More details" %}
+This could be improved with error handling etc. but for the purposes of this tutorial, we'll keep it simple.
+{% /callout %}
 
 Let's add a route to our Login application so that we can render the `RemoteEntryComponent`.  
 Open `app.module.ts` and add the following route to the `RouterMoodule.forRoot(...)` declaration.
@@ -318,7 +326,9 @@ Now let's create the Dashboard application where we'll hide some content if the 
 For this to work, the state within `UserService` must be shared across both applications. Usually, with Module Federation in Webpack, you have to specify the packages to share between all the applications in your Micro Frontend solution.  
 However, by taking advantage of Nx's project graph, Nx will automatically find and share the dependencies of your applications.
 
-_**Note:** This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy)_
+{% callout type="note" title="More details" %}
+This helps to enforce a single version policy and reduces the risk of [Micro Frontend Anarchy](https://www.thoughtworks.com/radar/techniques/micro-frontend-anarchy)\_
+{% /callout %}
 
 Now, let's delete the `app.component.html` and `app.component.css` files in the Dashboard application. They will not be needed for this tutorial.
 
@@ -328,9 +338,9 @@ Finally, let's add our logic to `app.component.ts`. Change it to match the follo
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { distinctUntilChanged } from 'rxjs/operators';
-import { UserService } from '@ng-mfe/shared/data-access-user';
+import { UserService } from '@ng-mf/shared/data-access-user';
 @Component({
-  selector: 'ng-mfe-root',
+  selector: 'ng-mf-root',
   template: `
     <div class="dashboard-nav">Admin Dashboard</div>
     <div *ngIf="isLoggedIn$ | async; else signIn">
@@ -346,11 +356,14 @@ export class AppComponent implements OnInit {
     this.isLoggedIn$
       .pipe(distinctUntilChanged())
       .subscribe(async (loggedIn) => {
-        if (!loggedIn) {
-          this.router.navigateByUrl('login');
-        } else {
-          this.router.navigateByUrl('');
-        }
+        // Queue the navigation after initialNavigation blocking is completed
+        setTimeout(() => {
+          if (!loggedIn) {
+            this.router.navigateByUrl('login');
+          } else {
+            this.router.navigateByUrl('');
+          }
+        });
       });
   }
 }
@@ -363,6 +376,14 @@ nx serve dashboard --devRemotes=login
 ```
 
 This concludes the setup required for a Micro Frontend approach using Static Module Federation.
+
+> _When serving module federation apps in dev mode locally, there'll be an error output to the console, `import.meta cannot be used outside of a module`, and the script that is coming from is `styles.js`. It's a known error output, but it doesn't actually cause any breakages from as far as our testing has shown. It's because Angular compiler attaches the styles.js file to the index.html in a script tag with defer._
+>
+> _It needs to be attached with `type=module`, but Angular can't make that change because it breaks HMR. They also provide no way of hooking into that process for us to patch it ourselves._
+>
+> _The good news is that the error doesn't propagate to production, because styles are compiled to a CSS file , so there's no erroneous JS to log an error._
+>
+> _It's worth stressing that there's been no actual errors or breakages noted from our tests._
 
 ## Converting the Dashboard application
 
@@ -391,7 +412,7 @@ We’ll start by creating this file. Add a `module-federation.manifest.json` fil
 Next, open `main.ts` under the `src/`folder and replace it with the following:
 
 ```typescript
-import { setRemoteDefinitions } from '@nrwl/angular/mfe';
+import { setRemoteDefinitions } from '@nrwl/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
@@ -445,7 +466,7 @@ Replace it with the following:
 You will also need to add the following import to the top of the file:
 
 ```typescript
-import { loadRemoteModule } from '@nrwl/angular/mfe';
+import { loadRemoteModule } from '@nrwl/angular/mf';
 ```
 
 The `loadRemoteModule` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed module from it.

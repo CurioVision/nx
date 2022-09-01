@@ -1,5 +1,5 @@
 import { getProjects, readJson, Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import libraryGenerator from './library';
 import { Linter } from '@nrwl/linter';
 import { Schema } from './schema';
@@ -17,7 +17,7 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    appTree = createTreeWithEmptyV1Workspace();
     appTree.write('.gitignore', '');
   });
 
@@ -273,7 +273,7 @@ describe('lib', () => {
         executor: '@nrwl/web:rollup',
         outputs: ['{options.outputPath}'],
         options: {
-          external: ['react/jsx-runtime'],
+          external: ['react/jsx-runtime', 'react-native'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',

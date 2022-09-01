@@ -1,4 +1,5 @@
 import {
+  formatFiles,
   getProjects,
   joinPathFragments,
   readProjectConfiguration,
@@ -8,13 +9,14 @@ import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import { getMFProjects } from '../../utils/get-mf-projects';
 import { normalizeProjectName } from '../utils/project';
+import { setupMf } from '../setup-mf/setup-mf';
 
 function findNextAvailablePort(tree: Tree) {
-  const mfeProjects = getMFProjects(tree);
+  const mfProjects = getMFProjects(tree);
 
   const ports = new Set<number>([4200]);
-  for (const mfeProject of mfeProjects) {
-    const { targets } = readProjectConfiguration(tree, mfeProject);
+  for (const mfProject of mfProjects) {
+    const { targets } = readProjectConfiguration(tree, mfProject);
     const port = targets?.serve?.options?.port ?? 4200;
     ports.add(port);
   }
@@ -32,16 +34,33 @@ export default async function remote(tree: Tree, options: Schema) {
     );
   }
 
+  const appName = normalizeProjectName(options.name, options.directory);
+  const port = options.port ?? findNextAvailablePort(tree);
+
   const installTask = await applicationGenerator(tree, {
     ...options,
-    mfe: true,
-    mfeType: 'remote',
+    routing: true,
+    skipDefaultProject: true,
+    port,
+  });
+
+  await setupMf(tree, {
+    appName,
+    mfType: 'remote',
     routing: true,
     host: options.host,
-    port: options.port ?? findNextAvailablePort(tree),
+    port,
+    skipPackageJson: options.skipPackageJson,
+    skipFormat: true,
+    e2eProjectName: `${appName}-e2e`,
+    standalone: options.standalone,
   });
 
   removeDeadCode(tree, options);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return installTask;
 }
@@ -72,31 +91,25 @@ function removeDeadCode(tree: Tree, options: Schema) {
   );
   tree.delete(joinPathFragments(project.sourceRoot, 'app/app.component.html'));
 
-  const pathToComponent = joinPathFragments(
+  const pathToAppComponent = joinPathFragments(
     project.sourceRoot,
     'app/app.component.ts'
   );
-  const component =
-    tree.read(pathToComponent, 'utf-8').split('templateUrl')[0] +
-    `template: '<router-outlet></router-outlet>'
+  if (!options.standalone) {
+    const component =
+      tree.read(pathToAppComponent, 'utf-8').split('templateUrl')[0] +
+      `template: '<router-outlet></router-outlet>'
 })
 export class AppComponent {}`;
 
-  tree.write(pathToComponent, component);
+    tree.write(pathToAppComponent, component);
 
-  tree.write(
-    joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
-    `/*
-* This RemoteEntryModule is imported here to allow TS to find the Module during
-* compilation, allowing it to be included in the built bundle. This is required
-* for the Module Federation Plugin to expose the Module correctly.
-* */
-import { RemoteEntryModule } from './remote-entry/entry.module';
-import { NgModule } from '@angular/core';
+    tree.write(
+      joinPathFragments(project.sourceRoot, 'app/app.module.ts'),
+      `import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
-import { AppComponent } from './app.component';
 import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
 
 @NgModule({
  declarations: [AppComponent],
@@ -111,5 +124,8 @@ import { RouterModule } from '@angular/router';
  bootstrap: [AppComponent],
 })
 export class AppModule {}`
-  );
+    );
+  } else {
+    tree.delete(pathToAppComponent);
+  }
 }

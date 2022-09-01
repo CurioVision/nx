@@ -1,4 +1,5 @@
-import { ExecutorContext, logger, readCachedProjectGraph } from '@nrwl/devkit';
+import { ExecutorContext, logger } from '@nrwl/devkit';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
 import {
@@ -8,13 +9,11 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
 import { execSync } from 'child_process';
 import { Range, satisfies } from 'semver';
 import { basename, join } from 'path';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
@@ -63,6 +62,8 @@ export interface WebWebpackExecutorOptions extends BuildBuilderOptions {
   generateIndexHtml?: boolean;
 
   postcssConfig?: string;
+
+  extractCss?: boolean;
 }
 
 async function getWebpackConfigs(
@@ -100,41 +101,43 @@ async function getWebpackConfigs(
     }
   }
 
-  return [
-    // ESM build for modern browsers.
-    getWebConfig(
-      context.root,
-      projectRoot,
-      sourceRoot,
-      options,
-      true,
-      isScriptOptimizeOn,
-      context.configurationName
-    ),
-    // ES5 build for legacy browsers.
-    isScriptOptimizeOn && buildBrowserFeatures.isDifferentialLoadingNeeded()
-      ? getWebConfig(
-          context.root,
-          projectRoot,
-          sourceRoot,
-          options,
-          false,
-          isScriptOptimizeOn,
-          context.configurationName
-        )
-      : undefined,
-  ]
-    .filter(Boolean)
-    .map((config) => {
-      if (customWebpack) {
-        return customWebpack(config, {
-          options,
-          configuration: context.configurationName,
-        });
-      } else {
-        return config;
-      }
-    });
+  return await Promise.all(
+    [
+      // ESM build for modern browsers.
+      getWebConfig(
+        context.root,
+        projectRoot,
+        sourceRoot,
+        options,
+        true,
+        isScriptOptimizeOn,
+        context.configurationName
+      ),
+      // ES5 build for legacy browsers.
+      isScriptOptimizeOn && buildBrowserFeatures.isDifferentialLoadingNeeded()
+        ? getWebConfig(
+            context.root,
+            projectRoot,
+            sourceRoot,
+            options,
+            false,
+            isScriptOptimizeOn,
+            context.configurationName
+          )
+        : undefined,
+    ]
+      .filter(Boolean)
+      .map(async (config) => {
+        if (customWebpack) {
+          return await customWebpack(config, {
+            options,
+            configuration: context.configurationName,
+          });
+        } else {
+          return config;
+        }
+      })
+  );
 }
 
 export async function* run(
@@ -176,7 +179,7 @@ export async function* run(
 
   if (!options.buildLibsFromSource && context.targetName) {
     const { dependencies } = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,
@@ -188,17 +191,6 @@ export async function* run(
       metadata.root,
       dependencies
     );
-
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      throw new Error();
-    }
   }
 
   // Delete output path before bundling
@@ -236,6 +228,7 @@ export async function* run(
         if (options.generateIndexHtml) {
           await writeIndexHtml({
             crossOrigin: options.crossOrigin,
+            sri: options.subresourceIntegrity,
             outputPath: join(options.outputPath, basename(options.index)),
             indexPath: join(context.root, options.index),
             files: emittedFiles1.filter((x) => x.extension === '.css'),

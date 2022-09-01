@@ -1,10 +1,30 @@
 # Angular Nx Tutorial - Step 1: Create Application
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/i37yJKK8qGI" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/i37yJKK8qGI"
+title="Nx.dev Tutorial | Angular | Step 1: Create Application"
+width="100%" /%}
 
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies like Cypress and Nest.
 
-> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% callout type="note" title="Plugins for a rich developer experience" %}
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.** [Read about using Nx without plugins](/core-tutorial/01-create-blog).
+{% /callout %}
+
+## Contents
+
+- [1 - Create Application](/angular-tutorial/01-create-application)
+- [2 - Add E2E Test](/angular-tutorial/02-add-e2e-test)
+- [3 - Display Todos](/angular-tutorial/03-display-todos)
+- [4 - Connect to API](/angular-tutorial/04-connect-to-api)
+- [5 - Add Node Application](/angular-tutorial/05-add-node-app)
+- [6 - Proxy Configuration](/angular-tutorial/06-proxy)
+- [7 - Share Code](/angular-tutorial/07-share-code)
+- [8 - Create Libraries](/angular-tutorial/08-create-libs)
+- [9 - Project Graph](/angular-tutorial/09-dep-graph)
+- [10 - Use Computation Caching](/angular-tutorial/10-computation-caching)
+- [11 - Test Affected Projects](/angular-tutorial/11-test-affected-projects)
+- [12 - Summary](/angular-tutorial/12-summary)
 
 ## Create a new workspace
 
@@ -43,7 +63,7 @@ myorg/
 │   │   │   └── test-setup.ts
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.editor.json
@@ -53,15 +73,13 @@ myorg/
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.ts
+│       │   ├── e2e/
+│       │   │   └── app.cy.ts
 │       │   └── support/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
-│       │       └── index.ts
-│       ├── cypress.json
+│       │       └── e2e.ts
+│       ├── cypress.config.ts
 │       ├── project.json
 │       └── tsconfig.json
 ├── libs/
@@ -70,7 +88,7 @@ myorg/
 ├── .prettierrc
 ├── angular.json
 ├── decorate-angular-cli.js
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package.json
@@ -103,27 +121,41 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```bash
-npm install -g nx
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn global add nx
 ```
 
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install -g nx
+```
+
+{% /tab %}
+{% /tabs %}
+
 Alternatively, you can run the local installation of Nx by prepending every command with `npx`:
+
+{% tabs %}
+{% tab label="yarn" %}
+
+```bash
+yarn nx serve todos
+```
+
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
 npx nx serve todos
 ```
 
-or
-
-```bash
-yarn nx serve todos
-```
+{% /tab %}
+{% /tabs %}
 
 ## Note on `nx serve` and `ng serve`
 

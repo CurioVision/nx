@@ -1,11 +1,11 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
+import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
 import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import scamGenerator from './scam';
+import { scamGenerator } from './scam';
 
 describe('SCAM Generator', () => {
   it('should create the inline scam correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -53,7 +53,7 @@ describe('SCAM Generator', () => {
 
   it('should create the separate scam correctly', async () => {
     // ARRANGE
-    const tree = createTreeWithEmptyWorkspace(2);
+    const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'app1', {
       projectType: 'application',
       sourceRoot: 'apps/app1/src',
@@ -86,10 +86,59 @@ describe('SCAM Generator', () => {
     `);
   });
 
+  it('should create the scam correctly and export it for a secondary entrypoint', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace();
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write('libs/lib1/feature/src/index.ts', '');
+    writeJson(tree, 'libs/lib1/feature/ng-package.json', {
+      lib: { entryFile: './src/index.ts' },
+    });
+
+    // ACT
+    await scamGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      path: 'libs/lib1/feature/src/lib',
+      inlineScam: false,
+      export: true,
+    });
+
+    // ASSERT
+    const componentModuleSource = tree.read(
+      'libs/lib1/feature/src/lib/example/example.module.ts',
+      'utf-8'
+    );
+    expect(componentModuleSource).toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { CommonModule } from '@angular/common';
+      import { ExampleComponent } from './example.component';
+
+      @NgModule({
+        imports: [CommonModule],
+        declarations: [ExampleComponent],
+        exports: [ExampleComponent],
+      })
+      export class ExampleComponentModule {}"
+    `);
+    const secondaryEntryPointSource = tree.read(
+      `libs/lib1/feature/src/index.ts`,
+      'utf-8'
+    );
+    expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
+      "export * from \\"./lib/example/example.component\\";
+      export * from \\"./lib/example/example.module\\";"
+    `);
+  });
+
   describe('--path', () => {
     it('should not throw when the path does not exist under project', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -138,7 +187,7 @@ describe('SCAM Generator', () => {
 
     it('should not matter if the path starts with a slash', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',
@@ -187,7 +236,7 @@ describe('SCAM Generator', () => {
 
     it('should throw when the path does not exist under project', async () => {
       // ARRANGE
-      const tree = createTreeWithEmptyWorkspace(2);
+      const tree = createTreeWithEmptyWorkspace();
       addProjectConfiguration(tree, 'app1', {
         projectType: 'application',
         sourceRoot: 'apps/app1/src',

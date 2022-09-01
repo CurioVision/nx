@@ -2,17 +2,14 @@ import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ReactComponentElement, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export interface SidebarProps {
   menu: Menu;
   navIsOpen?: boolean;
 }
 
-export function Sidebar({
-  menu,
-  navIsOpen,
-}: SidebarProps): ReactComponentElement<any> {
+export function Sidebar({ menu, navIsOpen }: SidebarProps): JSX.Element {
   return (
     <div
       data-testid="sidebar"
@@ -42,11 +39,7 @@ export function Sidebar({
   );
 }
 
-function SidebarSection({
-  section,
-}: {
-  section: MenuSection;
-}): ReactComponentElement<any> {
+function SidebarSection({ section }: { section: MenuSection }): JSX.Element {
   return (
     <>
       {section.hideSectionHeader ? null : (
@@ -68,11 +61,7 @@ function SidebarSection({
   );
 }
 
-function SidebarSectionItems({
-  item,
-}: {
-  item: MenuItem;
-}): ReactComponentElement<any> {
+function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(!item.disableCollapsible);
 
@@ -107,6 +96,9 @@ function SidebarSectionItems({
       <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
         {(item.itemList as MenuItem[]).map((subItem, index) => {
           const isActiveLink = subItem.path === withoutAnchors(router?.asPath);
+          const isNxCloudDocs = withoutAnchors(router?.asPath).startsWith(
+            '/nx-cloud'
+          );
           if (isActiveLink && collapsed) {
             handleCollapseToggle();
           }
@@ -122,7 +114,11 @@ function SidebarSectionItems({
                   )}
                 >
                   {isActiveLink ? (
-                    <span className="bg-blue-nx-base absolute -right-2 top-0 h-full w-1 rounded-md sm:-right-4" />
+                    <span
+                      className={`${
+                        isNxCloudDocs ? 'bg-green-nx-base' : 'bg-blue-nx-base'
+                      } absolute -right-2 top-0 h-full w-1 rounded-md sm:-right-4`}
+                    />
                   ) : null}
                   <span
                     className={cx('relative', {
@@ -145,7 +141,7 @@ function CollapsibleIcon({
   isCollapsed,
 }: {
   isCollapsed: boolean;
-}): ReactComponentElement<any> {
+}): JSX.Element {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -166,5 +162,3 @@ function CollapsibleIcon({
     </svg>
   );
 }
-
-export default Sidebar;

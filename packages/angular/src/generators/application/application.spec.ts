@@ -1,3 +1,4 @@
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import type { Tree } from '@nrwl/devkit';
 import * as devkit from '@nrwl/devkit';
 import {
@@ -5,9 +6,13 @@ import {
   parseJson,
   readJson,
   readProjectConfiguration,
+  readWorkspaceConfiguration,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -17,12 +22,17 @@ import {
 } from '../../utils/versions';
 import { applicationGenerator } from './application';
 import type { Schema } from './schema';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('app', () => {
   let appTree: Tree;
-
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace();
+    mockedInstalledCypressVersion.mockReturnValue(10);
+    appTree = createTreeWithEmptyV1Workspace();
   });
 
   describe('not nested', () => {
@@ -96,14 +106,18 @@ describe('app', () => {
       );
       expect(tsconfigApp.compilerOptions.outDir).toEqual('../../dist/out-tsc');
       expect(tsconfigApp.extends).toEqual('./tsconfig.json');
-      expect(tsconfigApp.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
+      expect(tsconfigApp.exclude).toEqual([
+        'jest.config.ts',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+      ]);
 
       const eslintrcJson = parseJson(
         appTree.read('apps/my-app/.eslintrc.json', 'utf-8')
       );
       expect(eslintrcJson.extends).toEqual(['../../.eslintrc.json']);
 
-      expect(appTree.exists('apps/my-app-e2e/cypress.json')).toBeTruthy();
+      expect(appTree.exists('apps/my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = parseJson(
         appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8')
       );
@@ -204,6 +218,38 @@ describe('app', () => {
       const appTsConfig = readJson(appTree, 'apps/app/tsconfig.json');
       expect(appTsConfig.extends).toBe('../../tsconfig.json');
     });
+
+    it('should set default project', async () => {
+      // ACT
+      await generateApp(appTree);
+
+      // ASSERT
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBe('my-app');
+    });
+
+    it('should not overwrite default project if already set', async () => {
+      // ARRANGE
+      const workspace = readWorkspaceConfiguration(appTree);
+      workspace.defaultProject = 'some-awesome-project';
+      devkit.updateWorkspaceConfiguration(appTree, workspace);
+
+      // ACT
+      await generateApp(appTree);
+
+      // ASSERT
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBe('some-awesome-project');
+    });
+
+    it('should not set default project when "--skip-default-project=true"', async () => {
+      // ACT
+      await generateApp(appTree, 'my-app', { skipDefaultProject: true });
+
+      // ASSERT
+      const { defaultProject } = readWorkspaceConfiguration(appTree);
+      expect(defaultProject).toBeUndefined();
+    });
   });
 
   describe('nested', () => {
@@ -253,7 +299,7 @@ describe('app', () => {
         'apps/my-dir/my-app/src/main.ts',
         'apps/my-dir/my-app/src/app/app.module.ts',
         'apps/my-dir/my-app/src/app/app.component.ts',
-        'apps/my-dir/my-app-e2e/cypress.json',
+        'apps/my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
       });
@@ -268,7 +314,7 @@ describe('app', () => {
         {
           path: 'apps/my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['**/*.test.ts', '**/*.spec.ts'],
+          expectedValue: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts'],
         },
         {
           path: 'apps/my-dir/my-app/.eslintrc.json',
@@ -302,7 +348,7 @@ describe('app', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      appTree = createTreeWithEmptyWorkspace(2);
+      appTree = createTreeWithEmptyWorkspace();
       updateJson(appTree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { appsDir: '' },
@@ -336,7 +382,7 @@ describe('app', () => {
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app.module.ts',
         'my-dir/my-app/src/app/app.component.ts',
-        'my-dir/my-app-e2e/cypress.json',
+        'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
       });
@@ -351,7 +397,7 @@ describe('app', () => {
         {
           path: 'my-dir/my-app/tsconfig.app.json',
           lookupFn: (json) => json.exclude,
-          expectedValue: ['**/*.test.ts', '**/*.spec.ts'],
+          expectedValue: ['jest.config.ts', '**/*.test.ts', '**/*.spec.ts'],
         },
         {
           path: 'my-dir/my-app/.eslintrc.json',
@@ -692,7 +738,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe(E2eTestRunner.Protractor, () => {
       it('should create the e2e project in v2 workspace', async () => {
-        appTree = createTreeWithEmptyWorkspace(2);
+        appTree = createTreeWithEmptyWorkspace();
 
         expect(
           async () =>
@@ -882,11 +928,11 @@ describe('app', () => {
     });
   });
 
-  describe('--mfe', () => {
+  describe('--mf', () => {
     test.each(['host', 'remote'])(
       'should generate a Module Federation correctly for a each app',
       async (type: 'host' | 'remote') => {
-        await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
+        await generateApp(appTree, 'my-app', { mf: true, mfType: type });
 
         expect(appTree.exists(`apps/my-app/webpack.config.js`)).toBeTruthy();
         expect(
@@ -901,7 +947,7 @@ describe('app', () => {
     test.each(['host', 'remote'])(
       'should update the builder to use webpack-browser',
       async (type: 'host' | 'remote') => {
-        await generateApp(appTree, 'my-app', { mfe: true, mfeType: type });
+        await generateApp(appTree, 'my-app', { mf: true, mfType: type });
 
         const projectConfig = readProjectConfiguration(appTree, 'my-app');
 
@@ -914,14 +960,14 @@ describe('app', () => {
     it('should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it', async () => {
       // ARRANGE
       await generateApp(appTree, 'app1', {
-        mfe: true,
-        mfeType: 'host',
+        mf: true,
+        mfType: 'host',
       });
 
       // ACT
       await generateApp(appTree, 'remote1', {
-        mfe: true,
-        mfeType: 'remote',
+        mf: true,
+        mfType: 'remote',
         host: 'app1',
       });
 
@@ -936,21 +982,21 @@ describe('app', () => {
     it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
       // ARRANGE
       await generateApp(appTree, 'app1', {
-        mfe: true,
-        mfeType: 'host',
+        mf: true,
+        mfType: 'host',
       });
 
       await generateApp(appTree, 'remote1', {
-        mfe: true,
-        mfeType: 'remote',
+        mf: true,
+        mfType: 'remote',
         host: 'app1',
         port: 4201,
       });
 
       // ACT
       await generateApp(appTree, 'remote2', {
-        mfe: true,
-        mfeType: 'remote',
+        mf: true,
+        mfType: 'remote',
         host: 'app1',
         port: 4202,
       });
@@ -963,7 +1009,7 @@ describe('app', () => {
       expect(hostWebpackConfig).toMatchSnapshot();
     });
 
-    it('should add a port to a non-mfe app', async () => {
+    it('should add a port to a non-mf app', async () => {
       // ACT
       await generateApp(appTree, 'app1', {
         port: 4205,
@@ -1026,6 +1072,58 @@ describe('app', () => {
       expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
       expect(devDependencies['postcss']).toBe(postcssVersion);
       expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
+    });
+  });
+
+  describe('--standalone', () => {
+    it('should generate a standalone app correctly with routing', async () => {
+      // ACT
+      await generateApp(appTree, 'standalone', {
+        standalone: true,
+        routing: true,
+      });
+
+      // ASSERT
+      expect(
+        appTree.read('apps/standalone/src/main.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/standalone/src/app/app.module.ts')
+      ).toBeFalsy();
+      expect(
+        appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
+      ).toContain('standalone: true');
+    });
+
+    it('should generate a standalone app correctly without routing', async () => {
+      // ACT
+      await generateApp(appTree, 'standalone', {
+        standalone: true,
+        routing: false,
+      });
+
+      // ASSERT
+      expect(
+        appTree.read('apps/standalone/src/main.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('apps/standalone/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.exists('apps/standalone/src/app/app.module.ts')
+      ).toBeFalsy();
+      expect(
+        appTree.read('apps/standalone/src/app/nx-welcome.component.ts', 'utf-8')
+      ).toContain('standalone: true');
     });
   });
 });

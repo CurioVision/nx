@@ -8,7 +8,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { getPackageManagerCommand } from '../utils/package-manager';
 import { writeJsonFile } from '../utils/fileutils';
 
-// Ensure that the output takes up the available width of the terminal
+// Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
 
 export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
@@ -25,6 +25,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
   .usage(chalk.bold('Smart, Fast and Extensible Build System'))
+  .demandCommand(1, '')
   .command({
     command: 'generate <generator> [_..]',
     describe:
@@ -50,7 +51,7 @@ export const commandsObject = yargs
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
     builder: (yargs) => withRunOneOptions(yargs),
     handler: async (args) =>
-      (await import('./run-one')).runOne(process.cwd(), { ...args }),
+      (await import('./run-one')).runOne(process.cwd(), withOverrides(args)),
   })
   .command({
     command: 'run-many',
@@ -62,7 +63,8 @@ export const commandsObject = yargs
         ),
         'run-many'
       ),
-    handler: async (args) => (await import('./run-many')).runMany({ ...args }),
+    handler: async (args) =>
+      (await import('./run-many')).runMany(withOverrides(args)),
   })
   .command({
     command: 'affected',
@@ -75,7 +77,7 @@ export const commandsObject = yargs
         'affected'
       ),
     handler: async (args) =>
-      (await import('./affected')).affected('affected', { ...args }),
+      (await import('./affected')).affected('affected', withOverrides(args)),
   })
   .command({
     command: 'affected:test',
@@ -87,7 +89,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'test',
       }),
   })
@@ -101,7 +103,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'build',
       }),
   })
@@ -115,7 +117,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'lint',
       }),
   })
@@ -129,7 +131,7 @@ export const commandsObject = yargs
       ),
     handler: async (args) =>
       (await import('./affected')).affected('affected', {
-        ...args,
+        ...withOverrides(args),
         target: 'e2e',
       }),
   })
@@ -185,9 +187,10 @@ export const commandsObject = yargs
         'print-affected'
       ),
     handler: async (args) =>
-      (await import('./affected')).affected('print-affected', {
-        ...args,
-      }),
+      (await import('./affected')).affected(
+        'print-affected',
+        withOverrides(args)
+      ),
   })
   .command({
     command: 'daemon',
@@ -306,7 +309,18 @@ export const commandsObject = yargs
         await (await import('./migrate')).migrate(process.cwd(), args)
       )
   )
-  .help('help')
+  .command(
+    'repair',
+    'Repair any configuration that is no longer supported by Nx.',
+    (yargs) =>
+      linkToNxDevAndExamples(yargs, 'repair').option('verbose', {
+        type: 'boolean',
+        describe:
+          'Prints additional information about the commands (e.g., stack traces)',
+      }),
+    async (args) => process.exit(await (await import('./repair')).repair(args))
+  )
+  .help()
   .version(nxVersion);
 
 function withFormatOptions(yargs: yargs.Argv): yargs.Argv {
@@ -435,7 +449,10 @@ function withAffectedOptions(yargs: yargs.Argv): yargs.Argv {
       default: false,
     })
     .option('verbose', {
-      describe: 'Print additional error stack trace on failure',
+      type: 'boolean',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      default: false,
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
@@ -467,14 +484,9 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'string',
     })
     .option('all', {
-      describe: 'Run the target on all projects in the workspace',
+      describe: '[deprecated] Run the target on all projects in the workspace',
       type: 'boolean',
-      default: undefined,
-    })
-    .check(({ all, projects }) => {
-      if ((all && projects) || (!all && !projects))
-        throw new Error('You must provide either --all or --projects');
-      return true;
+      default: true,
     })
     .options('runner', {
       describe: 'Override the tasks runner in `nx.json`',
@@ -505,7 +517,10 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       default: [],
     })
     .option('verbose', {
-      describe: 'Print additional error stack trace on failure',
+      type: 'boolean',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      default: false,
     })
     .option('nx-bail', {
       describe: 'Stop command execution after the first failed task',
@@ -516,9 +531,6 @@ function withRunManyOptions(yargs: yargs.Argv): yargs.Argv {
       describe: 'Ignore cycles in the task graph',
       type: 'boolean',
       default: false,
-    })
-    .conflicts({
-      all: 'projects',
     });
 }
 
@@ -540,6 +552,7 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'array',
       coerce: parseCSV,
     })
+
     .option('groupByFolder', {
       describe: 'Group projects by folder in the project graph',
       type: 'boolean',
@@ -562,6 +575,19 @@ function withDepGraphOptions(yargs: yargs.Argv): yargs.Argv {
       type: 'boolean',
       default: true,
     });
+}
+
+function withOverrides(args: any): any {
+  const split = process.argv.indexOf('--');
+  if (split > -1) {
+    const overrides = process.argv.slice(split + 1);
+    delete args._;
+    return { ...args, __overrides__: overrides };
+  } else {
+    args['__positional_overrides__'] = args._.slice(1);
+    delete args._;
+    return args;
+  }
 }
 
 function withParallelOption(yargs: yargs.Argv): yargs.Argv {
@@ -622,6 +648,12 @@ function withGenerateOptions(yargs: yargs.Argv) {
       describe: 'When false disables interactive input prompts for options',
       type: 'boolean',
       default: true,
+    })
+    .option('verbose', {
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
+      type: 'boolean',
+      default: false,
     });
 
   if (generatorWillShowHelp) {
@@ -676,6 +708,12 @@ function withRunOneOptions(yargs: yargs.Argv) {
     .option('nx-ignore-cycles', {
       describe: 'Ignore cycles in the task graph',
       type: 'boolean',
+      default: false,
+    })
+    .option('verbose', {
+      type: 'boolean',
+      describe:
+        'Prints additional information about the commands (e.g., stack traces)',
       default: false,
     });
 

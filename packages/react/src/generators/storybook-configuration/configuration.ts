@@ -22,6 +22,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
       schema.configureCypress && schema.generateCypressSpecs,
     js: schema.js,
     cypressProject,
+    ignorePaths: schema.ignorePaths,
   });
 }
 
@@ -37,6 +38,7 @@ export async function storybookConfigurationGenerator(
     linter: schema.linter,
     cypressDirectory: schema.cypressDirectory,
     standaloneConfig: schema.standaloneConfig,
+    tsConfiguration: schema.tsConfiguration,
   });
 
   if (schema.generateStories) {

@@ -44,7 +44,27 @@ export function calculateProjectDependencies(
   // gather the library dependencies
   const nonBuildableDependencies = [];
   const topLevelDependencies: DependentBuildableProjectNode[] = [];
-  const dependencies = collectDependencies(projectName, projGraph, [], shallow)
+  const collectedDeps = collectDependencies(
+    projectName,
+    projGraph,
+    [],
+    shallow
+  );
+  const missing = collectedDeps.reduce(
+    (missing: string[] | undefined, { name: dep }) => {
+      const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
+      if (!depNode) {
+        missing = missing || [];
+        missing.push(dep);
+      }
+      return missing;
+    },
+    null
+  );
+  if (missing) {
+    throw new Error(`Unable to find ${missing.join(', ')} in project graph.`);
+  }
+  const dependencies = collectedDeps
     .map(({ name: dep, isTopLevel }) => {
       let project: DependentBuildableProjectNode = null;
       const depNode = projGraph.nodes[dep] || projGraph.externalNodes[dep];
@@ -212,20 +232,13 @@ export function checkDependentProjectsHaveBeenBuilt(
     targetName,
     projectDependencies
   );
-  if (missing.length === projectDependencies.length && missing.length > 0) {
+  if (missing.length > 0) {
     console.error(stripIndents`
       It looks like all of ${projectName}'s dependencies have not been built yet:
       ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
 
-      You might be missing a "targetDependencies" configuration in your root nx.json (https://nx.dev/configuration/packagejson#target-dependencies),
-      or "dependsOn" configured in ${projectName}'s angular.json/workspace.json record or project.json (https://nx.dev/configuration/packagejson#dependson) 
-    `);
-  } else if (missing.length > 0) {
-    console.error(stripIndents`
-      Some of the project ${projectName}'s dependencies have not been built yet. Please build these libraries before:
-      ${missing.map((x) => ` - ${x.node.name}`).join('\n')}
-
-      Try: nx run ${projectName}:${targetName} --with-deps
+      You might be missing a "targetDefaults" configuration in your root nx.json (https://nx.dev/configuration/projectjson#target-defaults),
+      or "dependsOn" configured in ${projectName}'s project.json (https://nx.dev/configuration/projectjson#dependson) 
     `);
     return false;
   } else {
@@ -262,14 +275,39 @@ export function updatePaths(
   paths: Record<string, string[]>
 ) {
   const pathsKeys = Object.keys(paths);
+  // For each registered dependency
   dependencies.forEach((dep) => {
+    // If there are outputs
     if (dep.outputs && dep.outputs.length > 0) {
+      // Directly map the dependency name to the output paths (dist/packages/..., etc.)
       paths[dep.name] = dep.outputs;
-      // check for secondary entrypoints, only available for ng-packagr projects
+
+      // check for secondary entrypoints
+      // For each registered path
       for (const path of pathsKeys) {
-        if (path.startsWith(`${dep.name}/`)) {
-          const [, nestedPart] = path.split(`${dep.name}/`);
-          paths[path] = dep.outputs.map((o) => `${o}/${nestedPart}`);
+        const nestedName = `${dep.name}/`;
+
+        // If the path points to the current dependency and is nested (/)
+        if (path.startsWith(nestedName)) {
+          const nestedPart = path.slice(nestedName.length);
+
+          // Bind secondary endpoints for ng-packagr projects
+          let mappedPaths = dep.outputs.map(
+            (output) => `${output}/${nestedPart}`
+          );
+
+          // Get the dependency's package name
+          const { root } = dep.node?.data || {};
+          if (root) {
+            // Update nested mappings to point to the dependency's output paths
+            mappedPaths = mappedPaths.concat(
+              paths[path].flatMap((path) =>
+                dep.outputs.map((output) => path.replace(root, output))
+              )
+            );
+          }
+
+          paths[path] = mappedPaths;
         }
       }
     }

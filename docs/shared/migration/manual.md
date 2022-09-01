@@ -25,42 +25,39 @@ Select `empty` when prompted:
 
 ## Exploring your workspace
 
-Take a tour of your [Nx workspace](/getting-started/nx-setup). There are some important areas to know about as you migrate.
+Take a tour of your Nx workspace. There are some important areas to know about as you migrate.
 
 ### apps
 
 The `apps` directory is the place where your top-level applications will be stored. You should always begin your migration journey by adding an application.
 
-For Angular applications:
+{% tabs %}
+{% tab label="Angular" %}
 
 ```bash
 npm install --save-dev @nrwl/angular
-```
-
-and
-
-```bash
+# then
 nx generate @nrwl/angular:application my-application
 ```
 
-For React applications:
+{% /tab %}
+{% tab label="React" %}
 
 ```bash
 npm install --save-dev @nrwl/react
-```
-
-and
-
-```bash
+# then
 nx generate @nrwl/react:application my-application
 ```
+
+{% /tab %}
+{% /tabs %}
 
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
 - [Angular](/packages/angular/generators/application)
 - [React](/packages/react/generators/application)
 
-You may also find it useful to use the [Nx Console](/using-nx/console) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
+You may also find it useful to use the [Nx Console](/core-features/integrate-with-editors) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
 ### Configuration files
 
@@ -72,11 +69,11 @@ In general, you should not replace the configuration files provided for you. You
 
 In addition to configuration files for external libraries, your Nx workspace will have configuration files for Nx itself. This will be `angular.json` for workspaces using the Angular CLI and `workspace.json` for workspaces using the Nx CLI. This file will define all of the individual projects in your workspace (of which your application is one) and the tasks available for them.
 
-For example, your generated application should have four [tasks available](/executors/using-builders) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
+For example, your generated application should have four [tasks available](/plugin-features/use-task-executors) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
 
 These workspace configuration files can seem a little long and intimidating. The Nx Console can help you navigate it more easily with its Workspace JSON panel. By clicking on a project in your workspace, it will navigate you to the right place in the workspace file to begin making edits.
 
-Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/structure/monorepo-tags) that can help you impose constraints on your applications and library dependencies.
+Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/core-features/enforce-project-boundaries) that can help you impose constraints on your applications and library dependencies.
 
 ## Migrating your code
 
@@ -106,8 +103,6 @@ nx serve my-application
 
 If this doesn’t work for you, you may need to add or modify some configuration on the `build` task in your workspace configuration file.
 
-[Learn more about local serving](/cli/serve)
-
 ### Unit tests
 
 Each application will have a unit test process defined by your choices (Jest or Karma) during the creation of the application. To run tests for your application:
@@ -120,8 +115,6 @@ It is recommended that unit tests live next to the code they exercise and code s
 
 Testing configuration files can be found in the root of your application as well as the workspace configuration file.
 
-[Learn more about unit testing](/cli/test)
-
 ### End to End Tests
 
 Each application will have an e2e configuration created as a separate application, appended with `-e2e`. In our example, you’ll see `my-application-e2e`. This `e2e` task uses the test runner you chose during generation, Protractor or Cypress. Your application’s e2e tests should be migrated to this directory. There will be an e2e test scaffolded for you to make sure everything works before you start adding your own. To run the e2e tests:
@@ -130,9 +123,7 @@ Each application will have an e2e configuration created as a separate applicatio
 nx e2e my-application-e2e
 ```
 
-All of the configuration for your e2e tests should be in this directory.
-
-[Learn more about end-to-end testing](/cli/e2e)
+All the configuration for your e2e tests should be in this directory.
 
 ### Linting
 
@@ -152,8 +143,6 @@ nx lint my-application
 
 Global configuration files for linting will be at the root of your workspace. Each application and library will extend those configuration files. Global configuration changes should be made in the root, while application-or-library-specific changes should occur in the application or library configuration files.
 
-[Learn more about linting](/cli/lint)
-
 ### Formatting
 
 Nx uses Prettier to ensure standard formatting across your codebase. Prettier configuration files are located in the root of the workspace. To format your workspace run:
@@ -162,19 +151,19 @@ Nx uses Prettier to ensure standard formatting across your codebase. Prettier co
 nx format:write
 ```
 
-[Learn more about formatting](/cli/format-write)
+[Learn more about formatting](/nx/format-write)
 
 ### Adding tasks
 
 Nx offers built-in tasks for the most common needs: `serve`, `build`, `test`, `e2e`, and `lint`. You likely have additional tasks that are needed to manage or deploy your codebase. These tasks might include deployment, i18n workflows, or uploading assets to CDNs. These tasks can be set up as scripts that you run manually with node, ts-node, or npm scripts. You can migrate those tasks over as-is, to begin with.
 
-You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` builder](/executors/run-commands-builder) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
+You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` executor](/recipe/run-commands-executor) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 
-[Learn more about the `run-commands` builder](/packages/nx/executors/run-commands)
+[Learn more about the `run-commands` executor](/packages/nx/executors/run-commands)
 
-[Learn more about caching](/using-nx/caching)
+[Learn more about caching](/concepts/how-caching-works)
 
 [Learn more about community plugins](/community)
 
@@ -182,22 +171,29 @@ Your use-case may also be covered by one of our community plugins. Plugin author
 
 If your code is divided into libraries, you should also generate libraries for your code to migrate into:
 
-For Angular libraries:
+{% tabs %}
+{% tab label="Angular" %}
 
 ```bash
 nx generate @nrwl/angular:library
 ```
 
-For React libraries:
+{% /tab %}
+{% tab label="React" %}
 
 ```bash
 nx generate @nrwl/react:library
 ```
 
+{% /tab %}
+{% /tabs %}
+
+{% callout type="caution" title="Be mindful about where the code lives" %}
 It’s important to remember: don’t just drop your code anywhere! Always generate an app or a library for that code before migration. Without the project configuration, you’ll miss out on key functionalities of Nx provided by the project graph generation and affected code detection.
+{% /callout %}
 
 ### Establishing code boundaries
 
 If you’re consolidating multiple repositories or libraries into a single Nx workspace, you may have concerns about code boundaries. Previously, you may have had well-established boundaries by separating code into different repositories or having a public API for a library. Nx features a tagging system that allows you to enforce these code boundaries in a granular way. Each project can be tagged, and you can constrain dependencies based on these tags.
 
-[Learn more about tags and dependency constraints](/structure/monorepo-tags)
+[Learn more about tags and dependency constraints](/core-features/enforce-project-boundaries)

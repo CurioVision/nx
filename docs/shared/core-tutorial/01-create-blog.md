@@ -2,6 +2,15 @@
 
 In this tutorial you create multiple projects in a monorepo and take advantage of the core Nx features with a minimum of configuration.
 
+## Contents:
+
+- [1 - Create Blog](/core-tutorial/01-create-blog)
+- [2 - Create CLI](/core-tutorial/02-create-cli)
+- [3 - Share Assets](/core-tutorial/03-share-assets)
+- [4 - Build Affected Projects](/core-tutorial/04-build-affected-projects)
+- [5 - Automatically Detect Dependencies](/core-tutorial/05-auto-detect-dependencies)
+- [6 - Summary](/core-tutorial/06-summary)
+
 ## Create a New Workspace
 
 **Start by creating a new workspace.**
@@ -14,7 +23,7 @@ You then receive the following prompts in your command line:
 
 ```bash
 Workspace name (e.g., org name)         myorg
-What to create in the new workspace     core
+What to create in the new workspace     npm
 ```
 
 > You can also choose to add [Nx Cloud](https://nx.app), but its not required for the tutorial.
@@ -47,17 +56,26 @@ Which tells yarn (or npm) and Nx to look in the `packages` folder for projects t
 
 To install Eleventy run:
 
+{% tabs %}
+{% tab label="yarn" %}
+
 ```bash
 yarn add -D @11ty/eleventy@1.0.0
 ```
 
-or
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
-npm add -D @11ty/eleventy@1.0.0
+npm install -D @11ty/eleventy@1.0.0
 ```
 
-Note: We are intentionally installing the package at the root of the workspace because this forces the organization to have the upfront cost of agreeing on the same versions of dependencies rather than the delayed cost of having projects using multiple different incompatible versions of dependencies. This is not a requirement of Nx, just a suggestion to help you maintain a growing repo.
+{% /tab %}
+{% /tabs %}
+
+{% callout type="check" title="Installing in workspace's root" %}
+We are intentionally installing the package at the root of the workspace because this forces the organization to have the upfront cost of agreeing on the same versions of dependencies rather than the delayed cost of having projects using multiple different incompatible versions of dependencies. This is not a requirement of Nx, just a suggestion to help you maintain a growing repo.
+{% /callout %}
 
 **Eleventy Hello World**
 
@@ -109,7 +127,7 @@ To actually create a blog, we'll have to change a few more files. This is all El
 
 Update `index.html`:
 
-```html
+```html {% process=false %}
 ---
 layout: layout.liquid
 pageTitle: Welcome to my blog

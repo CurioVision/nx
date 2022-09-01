@@ -1,6 +1,7 @@
 {
   "githubRoot": "https://github.com/nrwl/nx/blob/master",
   "name": "node",
+  "packageName": "@nrwl/node",
   "description": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace.",
   "root": "/packages/node",
   "source": "/packages/node/src",
@@ -10,7 +11,7 @@
       "name": "Overview",
       "path": "/packages/node",
       "file": "shared/node-plugin",
-      "content": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:\n\n## Setting Up Node\n\nTo add the Node plugin to an existing workspace, run one of the following:\n\n```bash\n# For npm users\nnpm install -D @nrwl/node\n\n# For yarn users\nyarn add -D @nrwl/node\n```\n\n### Creating Applications\n\nYou can add a new application with the following:\n\n```bash\nnx g @nrwl/node:application my-new-app\n```\n\nYou can run your application with `nx serve my-new-app`, which starts it in watch mode.\n\n### Creating Libraries\n\nNode libraries are a good way to separate features within your organization. To create a Node library run the following command:\n\n```bash\nnx g @nrwl/js:node my-new-lib\n\n# If you want the library to be buildable or publishable to npm\nnx g @nrwl/node:lib my-new-lib --buildable\nnx g @nrwl/node:lib my-new-lib \\\n--publishable \\\n--importPath=@myorg/my-new-lib\n```\n\n## Using Node\n\n### Testing Projects\n\nYou can run unit tests with:\n\n```bash\nnx test my-new-app\nnx test my-new-lib\n```\n\nReplace `my-new-app` with the name or your project. This command works for both applications and libraries.\n\n### Building Projects\n\nNode applications can be build with:\n\n```bash\nnx build my-new-app\n```\n\nAnd if you generated a library with `--buildable`, then you can build a library as well:\n\n```bash\nnx build my-new-lib\n```\n\nThe output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.\n\n### Application Proxies\n\nGenerating Node applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.\n\n```bash\nnx g @nrwl/node:application my-new-app \\\n--frontendProject my-react-app\n```\n\n### Debugging\n\nDebugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` architect in the project.json. Or by running the serve command with `--port <number>`.\n\nFor additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).\n\n## More Documentation\n\n- [Using Cypress](/cypress/overview)\n- [Using Jest](/jest/overview)\n"
+      "content": "The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:\n\n## Setting Up Node\n\nTo add the Node plugin to an existing workspace, run one of the following:\n\n```bash\n# For npm users\nnpm install -D @nrwl/node\n\n# For yarn users\nyarn add -D @nrwl/node\n```\n\n### Creating Applications\n\nYou can add a new application with the following:\n\n```bash\nnx g @nrwl/node:application my-new-app\n```\n\nYou can run your application with `nx serve my-new-app`, which starts it in watch mode.\n\n### Creating Libraries\n\nNode libraries are a good way to separate features within your organization. To create a Node library run the following command:\n\n```bash\nnx g @nrwl/js:node my-new-lib\n\n# If you want the library to be buildable or publishable to npm\nnx g @nrwl/node:lib my-new-lib --buildable\nnx g @nrwl/node:lib my-new-lib \\\n--publishable \\\n--importPath=@myorg/my-new-lib\n```\n\n## Using Node\n\n### Testing Projects\n\nYou can run unit tests with:\n\n```bash\nnx test my-new-app\nnx test my-new-lib\n```\n\nReplace `my-new-app` with the name or your project. This command works for both applications and libraries.\n\n### Building Projects\n\nNode applications can be build with:\n\n```bash\nnx build my-new-app\n```\n\nAnd if you generated a library with `--buildable`, then you can build a library as well:\n\n```bash\nnx build my-new-lib\n```\n\nThe output is in the `dist` folder. You can customize the output folder by setting `outputPath` in the project's `project.json` file.\n\n### Application Proxies\n\nGenerating Node applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.\n\n```bash\nnx g @nrwl/node:application my-new-app \\\n--frontendProject my-react-app\n```\n\n### Debugging\n\nDebugging is set to use a random port that is available on the system. The port can be changed by setting the port option in the `serve` architect in the project.json. Or by running the serve command with `--port <number>`.\n\nFor additional information on how to debug Node applications, see the [Node.js debugging getting started guide](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients).\n\n## More Documentation\n\n- [Using Cypress](/packages/cypress)\n- [Using Jest](/packages/jest)\n"
     }
   ],
   "generators": [
@@ -281,15 +282,25 @@
         "properties": {
           "main": {
             "type": "string",
-            "description": "The name of the main entry-point file."
+            "description": "The name of the main entry-point file.",
+            "x-completion-type": "file",
+            "x-completion-glob": "main@(.js|.ts)"
           },
           "tsConfig": {
             "type": "string",
-            "description": "The name of the Typescript configuration file."
+            "description": "The name of the Typescript configuration file.",
+            "x-completion-type": "file",
+            "x-completion-glob": "tsconfig.*.json"
           },
           "outputPath": {
             "type": "string",
-            "description": "The output path of the generated files."
+            "description": "The output path of the generated files.",
+            "x-completion-type": "directory"
+          },
+          "deleteOutputPath": {
+            "type": "boolean",
+            "description": "Delete the output path before building.",
+            "default": true
           },
           "deleteOutputPath": {
             "type": "boolean",
@@ -300,6 +311,22 @@
             "type": "boolean",
             "description": "Run build when files change.",
             "default": false
+          },
+          "watchOptions": {
+            "type": "object",
+            "description": "A set of options used to customize watch mode.",
+            "properties": {
+              "aggregateTimeout": { "type": "integer" },
+              "ignored": {
+                "oneOf": [
+                  { "type": "array", "items": { "type": "string" } },
+                  { "type": "string" }
+                ]
+              },
+              "poll": { "type": "integer" },
+              "followSymlinks": { "type": "boolean" },
+              "stdin": { "type": "boolean" }
+            }
           },
           "poll": {
             "type": "number",
@@ -394,11 +421,13 @@
               "properties": {
                 "replace": {
                   "type": "string",
-                  "description": "The file to be replaced."
+                  "description": "The file to be replaced.",
+                  "x-completion-type": "file"
                 },
                 "with": {
                   "type": "string",
-                  "description": "The file to replace with."
+                  "description": "The file to replace with.",
+                  "x-completion-type": "file"
                 }
               },
               "additionalProperties": false,
@@ -408,8 +437,19 @@
           },
           "webpackConfig": {
             "oneOf": [
-              { "type": "array", "items": { "type": "string" } },
-              { "type": "string" }
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "webpack?(*)@(.js|.ts)"
+                }
+              },
+              {
+                "type": "string",
+                "x-completion-type": "file",
+                "x-completion-glob": "webpack?(*)@(.js|.ts)"
+              }
             ],
             "description": "Path to a function which takes a webpack config, context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack"
           },
@@ -457,7 +497,9 @@
                 },
                 "entryPath": {
                   "type": "string",
-                  "description": "Path to the additional entry file."
+                  "description": "Path to the additional entry file.",
+                  "x-completion-type": "file",
+                  "x-completion-glob": "**/*@(.js|.ts)"
                 }
               }
             }

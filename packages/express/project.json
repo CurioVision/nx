@@ -32,7 +32,7 @@
           {
             "input": "packages/express",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
@@ -74,7 +74,10 @@
           "packages/express/**/*.spec.jsx",
           "packages/express/**/*.d.ts",
           "packages/express/**/executors/**/schema.json",
-          "packages/express/**/generators/**/schema.json"
+          "packages/express/**/generators/**/schema.json",
+          "packages/express/generators.json",
+          "packages/express/package.json",
+          "packages/express/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

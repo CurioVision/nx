@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 6: Proxy Configuration
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/xfvCz-yLeEw" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/xfvCz-yLeEw"
+title="Nx.dev Tutorial | React | Step 6: Proxy"
+width="100%" /%}
 
 You passed `--frontendProject=todos` when creating the node application. What did that argument do?
 
@@ -73,9 +76,9 @@ Options:
   --help                  Show available options for project target.
 ```
 
-It helps with good editor integration (see [VSCode Support](/using-nx/console#nx-console-for-vscode)).
+It helps with good editor integration (see [VSCode Support](/core-features/integrate-with-editors#nx-console-for-vscode)).
 
-But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed [computation caching](/using-nx/caching) and [distributed builds](/using-nx/dte).
+But, most importantly, it provides a holistic dev experience regardless of the tools used, and enables advanced build features like distributed [computation caching](/concepts/how-caching-works) and [distributed builds](/concepts/dte).
 
 ## What's Next
 

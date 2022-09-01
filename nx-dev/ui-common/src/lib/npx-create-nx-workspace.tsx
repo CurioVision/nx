@@ -21,7 +21,7 @@ export function NpxCreateNxWorkspaceAnimation({
   restartFunction,
 }: {
   restartFunction: () => void;
-}) {
+}): JSX.Element {
   const npxCreateNxWorkspace = useAnimation();
   const wrapper = useAnimation();
   const firstLoading = useAnimation();
@@ -511,7 +511,8 @@ export function NpxCreateNxWorkspaceAnimation({
                   initial={{ opacity: 0 }}
                   animate={nxCloudSelectionTitle}
                 >
-                  Use Nx Cloud? (It's free and doesn't require registration.){' '}
+                  Set up distributed caching using Nx Cloud (It's free and
+                  doesn't require registration.){' '}
                   <motion.span
                     className="text-green-nx-base"
                     initial={{ opacity: 0 }}
@@ -599,12 +600,12 @@ export function NpxCreateNxWorkspaceAnimation({
                     First time using Nx? Check out this interactive Nx tutorial.
                     <br />
                     <a
-                      href="https://nx.dev/react/tutorial/01-create-application"
+                      href="https://nx.dev/react-tutorial/01-create-application"
                       target="_blank"
                       rel="noreferrer"
                       className="cursor-pointer opacity-50 hover:underline hover:opacity-100"
                     >
-                      https://nx.dev/react/tutorial/01-create-application
+                      https://nx.dev/react-tutorial/01-create-application
                     </a>
                     <br />
                     Prefer watching videos? Check out this free Nx course on
@@ -662,7 +663,7 @@ export function NpxCreateNxWorkspaceAnimation({
   );
 }
 
-export function NpxCreateNxWorkspace() {
+export function NpxCreateNxWorkspace(): JSX.Element {
   const [isDisplayed, setIsDisplayed] = useState(true);
 
   const restart = () => {
@@ -693,5 +694,3 @@ export function NpxCreateNxWorkspace() {
     </>
   );
 }
-
-export default NpxCreateNxWorkspace;

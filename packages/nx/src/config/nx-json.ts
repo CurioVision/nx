@@ -1,5 +1,8 @@
 import { PackageManager } from '../utils/package-manager';
-import { TargetDependencyConfig } from './workspace-json-project-json';
+import {
+  InputDefinition,
+  TargetDependencyConfig,
+} from './workspace-json-project-json';
 
 export type ImplicitDependencyEntry<T = '*' | string[]> = {
   [key: string]: T | ImplicitJsonSubsetDependency<T>;
@@ -16,8 +19,24 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
+export type TargetDefaults = Record<
+  string,
+  {
+    outputs?: string[];
+    dependsOn?: (TargetDependencyConfig | string)[];
+    inputs?: (InputDefinition | string)[];
+  }
+>;
+
+export type TargetDependencies = Record<
+  string,
+  (TargetDependencyConfig | string)[]
+>;
+
 /**
  * Nx.json configuration
+ *
+ * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
@@ -29,9 +48,18 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
   /**
+   * @deprecated use targetDefaults instead
    * Dependencies between different target names across all projects
    */
-  targetDependencies?: Record<string, (TargetDependencyConfig | string)[]>;
+  targetDependencies?: TargetDependencies;
+  /**
+   * Named inputs targets can refer to reduce duplication
+   */
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
+  /**
+   * Dependencies between different target names across all projects
+   */
+  targetDefaults?: TargetDefaults;
   /**
    * NPM Scope that the workspace uses
    */

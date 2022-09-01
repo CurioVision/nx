@@ -4,7 +4,7 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '../../../utils/lint';
 import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
@@ -24,7 +24,7 @@ describe('updateEslint', () => {
       relativeToRootDestination: 'libs/shared/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should handle .eslintrc.json not existing', async () => {
@@ -154,6 +154,50 @@ describe('updateEslint', () => {
           expect.objectContaining({
             parserOptions: expect.objectContaining({
               project: ['libs/shared/my-destination/tsconfig.*?.json'],
+            }),
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('should update multiple .eslintrc.json overrides parser project when project is moved', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      linter: Linter.EsLint,
+      setParserOptionsProject: true,
+      standaloneConfig: false,
+    });
+
+    // Add another parser project to eslint.json
+    const storybookProject = '.storybook/tsconfig.json';
+    updateJson(tree, '/libs/my-lib/.eslintrc.json', (eslintRcJson) => {
+      eslintRcJson.overrides[0].parserOptions.project.push(
+        `libs/my-lib/${storybookProject}`
+      );
+      return eslintRcJson;
+    });
+
+    // This step is usually handled elsewhere
+    tree.rename(
+      'libs/my-lib/.eslintrc.json',
+      'libs/shared/my-destination/.eslintrc.json'
+    );
+    const projectConfig = readProjectConfiguration(tree, 'my-lib');
+
+    updateEslintrcJson(tree, schema, projectConfig);
+
+    expect(
+      readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
+    ).toEqual(
+      expect.objectContaining({
+        overrides: expect.arrayContaining([
+          expect.objectContaining({
+            parserOptions: expect.objectContaining({
+              project: [
+                'libs/shared/my-destination/tsconfig.*?.json',
+                `libs/shared/my-destination/${storybookProject}`,
+              ],
             }),
           }),
         ]),

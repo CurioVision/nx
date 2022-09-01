@@ -44,7 +44,7 @@ nx g @nrwl/react:lib my-new-lib \
 --importPath=@myorg/my-new-lib
 ```
 
-Read more about [building and publishing libraries here](/structure/buildable-and-publishable-libraries).
+Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).
 
 ### Creating Components
 
@@ -121,6 +121,6 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [Using Cypress](/cypress/overview)
-- [Using Jest](/jest/overview)
+- [Using Cypress](/packages/cypress)
+- [Using Jest](/packages/jest)
 - [Using Storybook](/storybook/overview-react)

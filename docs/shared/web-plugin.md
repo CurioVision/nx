@@ -30,11 +30,13 @@ The application uses no framework and generates with web components. You can add
 
 To start the application in development mode, run `nx serve my-new-app`.
 
-**Note:** If you are looking to add a React application, check out the [React plugin](/packages/react).
+{% callout type="note" title="React" %}
+If you are looking to add a React application, check out the [React plugin](/packages/react).
+{% /callout %}
 
 ### Creating Libraries
 
-To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/js/overview) plugin.
+To create a generic TypeScript library (i.e. non-framework specific), use the [`@nrwl/js`](/packages/js) plugin.
 
 ```bash
 nx g @nrwl/js:lib my-new-lib

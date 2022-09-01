@@ -63,7 +63,9 @@ The exported function first creates the library, then creates the additional fil
 
 Next, run the generator:
 
-> Use the `-d` or `--dry-run` flag to see your changes without applying them.
+{% callout type="warning" title="Always do a dry-run" %}
+Use the `-d` or `--dry-run` flag to see your changes without applying them. This will let you see what the command will do to your workspace.
+{% /callout %}
 
 ```bash
 nx workspace-generator my-generator mylib
@@ -83,9 +85,9 @@ UPDATE tsconfig.base.json
 UPDATE workspace.json
 UPDATE nx.json
 CREATE libs/mylib/.eslintrc.json
-CREATE libs/mylib/jest.config.js
+CREATE libs/mylib/jest.config.ts
 CREATE libs/mylib/tsconfig.spec.json
-UPDATE jest.config.js
+UPDATE jest.config.ts
 CREATE libs/mylib/NOTES.md
 ```
 

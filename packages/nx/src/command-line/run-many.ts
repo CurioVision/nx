@@ -8,38 +8,45 @@ import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { readEnvironment } from './read-environment';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function runMany(
-  parsedArgs: yargs.Arguments & RawNxArgs,
+  args: { [k: string]: any },
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {}
+  > = {},
+  extraOptions = { excludeTaskDependencies: false } as {
+    excludeTaskDependencies: boolean;
+  }
 ) {
   performance.mark('command-execution-begins');
-  const env = readEnvironment();
+  const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-    parsedArgs,
+    args,
     'run-many',
     { printWarnings: true },
-    env.nxJson
+    nxJson
   );
+  if (nxArgs.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
 
   await runCommand(
     projects,
     projectGraph,
-    env,
+    { nxJson },
     nxArgs,
     overrides,
     null,
-    extraTargetDependencies
+    extraTargetDependencies,
+    extraOptions
   );
 }
 
@@ -49,7 +56,8 @@ function projectsToRun(
 ): ProjectGraphProjectNode[] {
   const allProjects = Object.values(projectGraph.nodes);
   const excludedProjects = new Set(nxArgs.exclude ?? []);
-  if (nxArgs.all) {
+  // --all is default now, if --projects is provided, it'll override the --all
+  if (nxArgs.all && nxArgs.projects.length === 0) {
     const res = runnableForTarget(allProjects, nxArgs.target).filter(
       (proj) => !excludedProjects.has(proj.name)
     );

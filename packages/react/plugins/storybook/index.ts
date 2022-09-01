@@ -1,9 +1,12 @@
-import { joinPathFragments, readJsonFile } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  readJsonFile,
+  logger,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import { getBaseWebpackPartial } from '@nrwl/web/src/utils/config';
 import { getStylesPartial } from '@nrwl/web/src/utils/web.config';
 import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
-import { logger } from '@storybook/node-logger';
 import { join } from 'path';
 import { gte } from 'semver';
 import { Configuration, WebpackPluginInstance, DefinePlugin } from 'webpack';
@@ -18,7 +21,7 @@ function getClientEnvironment(mode) {
   // Grab NODE_ENV and NX_* and STORYBOOK_* environment variables and prepare them to be
   // injected into the application via DefinePlugin in webpack configuration.
   const NX_PREFIX = /^NX_/i;
-  const STORYBOOK_PREFIX = /^STORYBOOK__/i;
+  const STORYBOOK_PREFIX = /^STORYBOOK_/i;
 
   const raw = Object.keys(process.env)
     .filter((key) => NX_PREFIX.test(key) || STORYBOOK_PREFIX.test(key))

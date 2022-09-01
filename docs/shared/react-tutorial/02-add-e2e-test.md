@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 2: Add E2E Tests
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/3HSzqt3WiVg" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/3HSzqt3WiVg"
+title="Nx.dev Tutorial | React | Step 2: Add E2E Tests"
+width="100%" /%}
 
 By default, Nx uses [Cypress](https://cypress.io) to run E2E tests.
 
@@ -13,7 +16,7 @@ export const getTodos = () => cy.get('li.todo');
 export const getAddTodoButton = () => cy.get('button#add-todo');
 ```
 
-**Next, update `apps/todos-e2e/src/integration/app.spec.ts`.**
+**Next, update `apps/todos-e2e/src/e2e/app.cy.ts`.**
 
 ```typescript
 import { getAddTodoButton, getTodos } from '../support/app.po';

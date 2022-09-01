@@ -2,17 +2,20 @@ import { runCommand } from '../tasks-runner/run-command';
 import { splitArgsIntoNxArgsAndOverrides } from '../utils/command-line-utils';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
 import { performance } from 'perf_hooks';
-import { createProjectGraphAsync } from '../project-graph/project-graph';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { workspaceRoot } from '../utils/workspace-root';
 import { splitTarget } from '../utils/split-target';
 import { output } from '../utils/output';
-import { readEnvironment } from './read-environment';
 import {
   ProjectsConfigurations,
   TargetDependencyConfig,
 } from '../config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function runOne(
   cwd: string,
@@ -20,13 +23,21 @@ export async function runOne(
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
-  > = {}
+  > = {},
+  extraOptions = { excludeTaskDependencies: false } as {
+    excludeTaskDependencies: boolean;
+  }
 ): Promise<void> {
   performance.mark('command-execution-begins');
   performance.measure('code-loading', 'init-local', 'command-execution-begins');
 
-  const env = readEnvironment();
-  const opts = parseRunOneOptions(cwd, args, env.workspaceJson);
+  const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+
+  const opts = parseRunOneOptions(cwd, args, {
+    ...readProjectsConfigurationFromProjectGraph(projectGraph),
+    ...nxJson,
+  });
 
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
     {
@@ -36,17 +47,17 @@ export async function runOne(
     },
     'run-one',
     { printWarnings: true },
-    env.nxJson
+    nxJson
   );
-
+  if (nxArgs.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
   if (nxArgs.help) {
     await (
       await import('./run')
     ).run(cwd, workspaceRoot, opts, {}, false, true);
     process.exit(0);
   }
-
-  const projectGraph = await createProjectGraphAsync();
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
@@ -55,11 +66,12 @@ export async function runOne(
   await runCommand(
     projects,
     projectGraph,
-    env,
+    { nxJson },
     nxArgs,
     overrides,
     opts.project,
-    extraTargetDependencies
+    extraTargetDependencies,
+    extraOptions
   );
 }
 
@@ -121,7 +133,7 @@ function parseRunOneOptions(
     project = defaultProjectName;
   }
   if (!project || !target) {
-    throw new Error(`Both project and target to have to be specified`);
+    throw new Error(`Both project and target have to be specified`);
   }
   if (targetAliases[target]) {
     target = targetAliases[target];

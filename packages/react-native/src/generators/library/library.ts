@@ -44,14 +44,13 @@ export async function reactNativeLibraryGenerator(
     e2eTestRunner: 'none',
   });
 
-  const lintTask = await addLinting(
-    host,
-    options.name,
-    options.projectRoot,
-    [joinPathFragments(options.projectRoot, 'tsconfig.lib.json')],
-    options.linter,
-    options.setParserOptionsProject
-  );
+  const lintTask = await addLinting(host, {
+    ...options,
+    projectName: options.name,
+    tsConfigPaths: [
+      joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+    ],
+  });
 
   if (!options.skipTsConfig) {
     updateBaseTsConfig(host, options);
@@ -81,7 +80,7 @@ function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.publishable || options.buildable) {
     const { libsDir } = getWorkspaceLayout(host);
-    const external = ['react/jsx-runtime'];
+    const external = ['react/jsx-runtime', 'react-native'];
 
     targets.build = {
       executor: '@nrwl/web:rollup',

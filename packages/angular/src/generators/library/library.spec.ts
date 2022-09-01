@@ -7,7 +7,10 @@ import {
   Tree,
   updateJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  createTreeWithEmptyV1Workspace,
+  createTreeWithEmptyWorkspace,
+} from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { toNewFormat } from 'nx/src/config/workspaces';
 import { createApp } from '../../utils/nx-devkit/testing';
@@ -19,6 +22,7 @@ import {
 } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
+import applicationGenerator from '../application/application';
 
 describe('lib', () => {
   let tree: Tree;
@@ -38,12 +42,12 @@ describe('lib', () => {
   }
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   describe('workspace v2', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(2);
+      tree = createTreeWithEmptyWorkspace();
     });
 
     it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -78,7 +82,7 @@ describe('lib', () => {
 
   describe('workspace v1', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(1);
+      tree = createTreeWithEmptyV1Workspace();
     });
 
     it('should default to inline project for first project', async () => {
@@ -394,6 +398,7 @@ describe('lib', () => {
         expect(tsconfigJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
       });
@@ -409,6 +414,7 @@ describe('lib', () => {
         expect(tsconfigJson.exclude).toEqual([
           'src/test.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
       });
@@ -421,7 +427,11 @@ describe('lib', () => {
 
         // ASSERT
         const tsconfigJson = readJson(tree, 'libs/my-lib/tsconfig.lib.json');
-        expect(tsconfigJson.exclude).toEqual(['**/*.test.ts', '**/*.spec.ts']);
+        expect(tsconfigJson.exclude).toEqual([
+          'jest.config.ts',
+          '**/*.test.ts',
+          '**/*.spec.ts',
+        ]);
       });
     });
 
@@ -712,7 +722,7 @@ describe('lib', () => {
 
   describe('at the root', () => {
     beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace(2);
+      tree = createTreeWithEmptyWorkspace();
       updateJson(tree, 'nx.json', (json) => ({
         ...json,
         workspaceLayout: { libsDir: '' },
@@ -758,7 +768,6 @@ describe('lib', () => {
 
       // Make sure these exist
       [
-        'my-dir/my-lib/.browserslistrc',
         'my-dir/my-lib/jest.config.ts',
         'my-dir/my-lib/ng-package.json',
         'my-dir/my-lib/project.json',
@@ -858,8 +867,6 @@ describe('lib', () => {
         const moduleContents = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
-
-        const tsConfigAppJson = readJson(tree, 'apps/myapp/tsconfig.app.json');
         const tsConfigLibJson = parseJson(
           tree.read('libs/my-dir/my-lib/tsconfig.lib.json').toString()
         );
@@ -876,10 +883,6 @@ describe('lib', () => {
         const moduleContents2 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
-
-        const tsConfigAppJson2 = parseJson(
-          tree.read('apps/myapp/tsconfig.app.json').toString()
-        );
         const tsConfigLibJson2 = parseJson(
           tree.read('libs/my-dir/my-lib2/tsconfig.lib.json').toString()
         );
@@ -896,11 +899,6 @@ describe('lib', () => {
         const moduleContents3 = tree
           .read('apps/myapp/src/app/app.module.ts')
           .toString();
-
-        const tsConfigAppJson3 = parseJson(
-          tree.read('apps/myapp/tsconfig.app.json').toString()
-        );
-
         const tsConfigLibJson3 = parseJson(
           tree.read('libs/my-dir/my-lib3/tsconfig.lib.json').toString()
         );
@@ -908,58 +906,46 @@ describe('lib', () => {
         // ASSERT
         expect(moduleContents).toContain('RouterModule.forRoot([');
         expect(moduleContents).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
+          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
         );
 
-        expect(tsConfigAppJson.include).toEqual([
-          '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts',
-        ]);
         expect(tsConfigLibJson.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
 
         expect(moduleContents2).toContain('RouterModule.forRoot([');
         expect(moduleContents2).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
+          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
         );
         expect(moduleContents2).toContain(
-          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(module => module.MyLib2Module)}`
+          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(m => m.MyLib2Module)}`
         );
 
-        expect(tsConfigAppJson2.include).toEqual([
-          '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts',
-          '../../libs/my-dir/my-lib2/src/index.ts',
-        ]);
         expect(tsConfigLibJson2.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
 
         expect(moduleContents3).toContain('RouterModule.forRoot([');
         expect(moduleContents3).toContain(
-          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}`
+          `{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}`
         );
         expect(moduleContents3).toContain(
-          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(module => module.MyLib2Module)}`
+          `{path: 'my-lib2', loadChildren: () => import('@proj/my-dir/my-lib2').then(m => m.MyLib2Module)}`
         );
         expect(moduleContents3).toContain(
-          `{path: 'my-lib3', loadChildren: () => import('@proj/my-dir/my-lib3').then(module => module.MyLib3Module)}`
+          `{path: 'my-lib3', loadChildren: () => import('@proj/my-dir/my-lib3').then(m => m.MyLib3Module)}`
         );
 
-        expect(tsConfigAppJson3.include).toEqual([
-          '**/*.ts',
-          '../../libs/my-dir/my-lib/src/index.ts',
-          '../../libs/my-dir/my-lib2/src/index.ts',
-          '../../libs/my-dir/my-lib3/src/index.ts',
-        ]);
         expect(tsConfigLibJson3.exclude).toEqual([
           'src/test-setup.ts',
           '**/*.spec.ts',
+          'jest.config.ts',
           '**/*.test.ts',
         ]);
       });
@@ -1001,7 +987,7 @@ describe('lib', () => {
 
         expect(moduleContents).toContain('RouterModule.forRoot(routes)');
         expect(moduleContents).toContain(
-          `const routes = [{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(module => module.MyDirMyLibModule)}];`
+          `const routes = [{path: 'my-dir-my-lib', loadChildren: () => import('@proj/my-dir/my-lib').then(m => m.MyDirMyLibModule)}];`
         );
       });
     });
@@ -1474,6 +1460,220 @@ describe('lib', () => {
       expect(devDependencies['tailwindcss']).toBe(tailwindVersion);
       expect(devDependencies['postcss']).toBe(postcssVersion);
       expect(devDependencies['autoprefixer']).toBe(autoprefixerVersion);
+    });
+  });
+
+  describe('--standalone', () => {
+    it('should generate a library with a standalone component as entry point', async () => {
+      await runLibraryGeneratorWithOpts({ standalone: true });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup', async () => {
+      await runLibraryGeneratorWithOpts({ standalone: true, routing: true });
+
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'libs/my-lib/src/lib/my-lib/my-lib.component.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as direct child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        parentModule: 'apps/app1/src/app/app.module.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to parent module as a lazy child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parentModule: 'apps/app1/src/app/app.module.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('apps/app1/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as direct child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+        standalone: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        parentModule: 'apps/app1/src/main.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { enableProdMode, importProvidersFrom } from '@angular/core';
+        import { bootstrapApplication } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app/app.component';
+        import { environment } from './environments/environment';
+        import { MYLIB_ROUTES } from '@proj/my-lib';
+
+        if (environment.production) {
+          enableProdMode();
+        }
+
+        bootstrapApplication(AppComponent, {
+          providers: [importProvidersFrom(RouterModule.forRoot([
+            { path: 'my-lib', children: MYLIB_ROUTES },], {initialNavigation: 'enabledBlocking'}))],
+        }).catch((err) => console.error(err))"
+      `);
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent module as a lazy child', async () => {
+      // ARRANGE
+      await applicationGenerator(tree, {
+        name: 'app1',
+        routing: true,
+        standalone: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parentModule: 'apps/app1/src/main.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { enableProdMode, importProvidersFrom } from '@angular/core';
+        import { bootstrapApplication } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app/app.component';
+        import { environment } from './environments/environment';
+
+        if (environment.production) {
+          enableProdMode();
+        }
+
+        bootstrapApplication(AppComponent, {
+          providers: [importProvidersFrom(RouterModule.forRoot([
+            {path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.MYLIB_ROUTES)},], {initialNavigation: 'enabledBlocking'}))],
+        }).catch((err) => console.error(err))"
+      `);
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as direct child', async () => {
+      // ARRANGE
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        name: 'second',
+        standalone: true,
+        routing: true,
+        parentModule: 'libs/my-lib/src/lib/routes.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+            import { MyLibComponent } from './my-lib/my-lib.component';
+        import { SECOND_ROUTES } from '@proj/second';
+            
+                export const MYLIB_ROUTES: Route[] = [
+            { path: 'second', children: SECOND_ROUTES },
+                  {path: '', component: MyLibComponent}
+                ]"
+      `);
+    });
+
+    it('should generate a library with a standalone component as entry point with routing setup and attach it to standalone parent routes as a lazy child', async () => {
+      // ARRANGE
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        routing: true,
+      });
+
+      // ACT
+      await runLibraryGeneratorWithOpts({
+        name: 'second',
+        standalone: true,
+        routing: true,
+        lazy: true,
+        parentModule: 'libs/my-lib/src/lib/routes.ts',
+      });
+
+      // ASSERT
+      expect(tree.read('libs/my-lib/src/lib/routes.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Route } from '@angular/router';
+            import { MyLibComponent } from './my-lib/my-lib.component';
+            
+                export const MYLIB_ROUTES: Route[] = [
+            {path: 'second', loadChildren: () => import('@proj/second').then(m => m.SECOND_ROUTES)},
+                  {path: '', component: MyLibComponent}
+                ]"
+      `);
     });
   });
 });

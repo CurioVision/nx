@@ -10,11 +10,14 @@
     },
     "entryFile": {
       "type": "string",
-      "description": "The path to the entry file, relative to project."
+      "description": "The path to the entry file, relative to project.",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.js|.ts)"
     },
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files."
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory"
     },
     "deleteOutputPath": {
       "type": "boolean",
@@ -23,7 +26,9 @@
     },
     "tsConfig": {
       "type": "string",
-      "description": "The path to tsconfig file."
+      "description": "The path to tsconfig file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
     },
     "format": {
       "type": "array",
@@ -63,11 +68,15 @@
         {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "x-completion-type": "file",
+            "x-completion-glob": "rollup?(*)@(.js|.ts)"
           }
         },
         {
-          "type": "string"
+          "type": "string",
+          "x-completion-type": "file",
+          "x-completion-glob": "rollup?(*)@(.js|.ts)"
         }
       ],
       "description": "Path to a function which takes a rollup config and returns an updated rollup config."
@@ -97,8 +106,8 @@
       "default": []
     },
     "extractCss": {
-      "type": "boolean",
-      "description": "CSS files will be extracted to the output folder.",
+      "type": ["boolean", "string"],
+      "description": "CSS files will be extracted to the output folder. Alternatively custom filename can be provided (e.g. styles.css)",
       "default": true
     },
     "assets": {
@@ -114,10 +123,24 @@
       "enum": ["babel", "swc"],
       "default": "babel",
       "description": "Which compiler to use."
+    },
+    "javascriptEnabled": {
+      "type": "boolean",
+      "description": "Sets `javascriptEnabled` option for less loader",
+      "default": false
+    },
+    "generateExportsField": {
+      "type": "boolean",
+      "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
+      "default": false
+    },
+    "skipTypeField": {
+      "type": "boolean",
+      "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
+      "default": false
     }
   },
   "required": ["tsConfig", "project", "entryFile", "outputPath"],
-
   "definitions": {
     "assetPattern": {
       "oneOf": [

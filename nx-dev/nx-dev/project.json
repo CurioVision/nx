@@ -13,13 +13,18 @@
       "executor": "nx:run-commands",
       "options": {
         "outputPath": "dist/nx-dev/nx-dev",
-        "command": "nx run nx-dev:sitemap"
+        "commands": [
+          "nx run nx-dev:sitemap",
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+        ],
+        "parallel": false
       }
     },
     "sitemap": {
       "executor": "nx:run-commands",
-      "outputs": [],
+      "outputs": ["{options.outputPath}"],
       "options": {
+        "outputPath": "dist/nx-dev/nx-dev/public",
         "command": "yarn next-sitemap --config ./nx-dev/nx-dev/next-sitemap.js"
       }
     },
@@ -45,7 +50,9 @@
         "outputPath": "dist/nx-dev/nx-dev"
       },
       "configurations": {
-        "development": {},
+        "development": {
+          "outputPath": "nx-dev/nx-dev"
+        },
         "production": {}
       }
     },

@@ -64,5 +64,24 @@
       "factory": "./src/migrations/update-13-8-0/add-postcss-config-option"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "14.3.7": {
+      "version": "14.3.7-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.5": {
+      "version": "14.5.5-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.7.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

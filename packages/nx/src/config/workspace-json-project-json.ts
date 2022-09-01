@@ -11,6 +11,7 @@ export type WorkspaceJsonConfiguration = ProjectsConfigurations;
 
 /**
  * Projects Configurations
+ * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
  */
 export interface ProjectsConfigurations {
   /**
@@ -37,6 +38,8 @@ export type ProjectType = 'library' | 'application';
 
 /**
  * Project configuration
+ *
+ * @note: when adding properties here add them to `allowedProjectExtensions` in adapter/compat.ts
  */
 export interface ProjectConfiguration {
   /**
@@ -89,6 +92,11 @@ export interface ProjectConfiguration {
   implicitDependencies?: string[];
 
   /**
+   * Named inputs targets can refer to reduce duplication
+   */
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
+
+  /**
    * List of tags used by nx-enforce-module-boundaries / project graph
    */
   tags?: string[];
@@ -107,7 +115,18 @@ export interface TargetDependencyConfig {
    * The name of the target
    */
   target: string;
+
+  /**
+   * Configuration for params handling.
+   */
+  params?: 'ignore' | 'forward';
 }
+
+export type InputDefinition =
+  | { input: string; projects: 'self' | 'dependencies' }
+  | { fileset: string }
+  | { runtime: string }
+  | { env: string };
 
 /**
  * Target's configuration
@@ -130,6 +149,11 @@ export interface TargetConfiguration<T = any> {
    * This describes other targets that a target depends on.
    */
   dependsOn?: (TargetDependencyConfig | string)[];
+
+  /**
+   * This describes filesets, runtime dependencies and other inputs that a target depends on.
+   */
+  inputs?: (InputDefinition | string)[];
 
   /**
    * Target's options. They are passed in to the executor.

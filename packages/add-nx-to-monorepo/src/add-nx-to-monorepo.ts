@@ -62,8 +62,8 @@ async function askAboutNxCloud(parsedArgs: any) {
       .prompt([
         {
           name: 'NxCloud',
-          message: `Use Nx Cloud? (It's free and doesn't require registration.)`,
-          type: 'select',
+          message: `Set up distributed caching using Nx Cloud (It's free and doesn't require registration.)`,
+          type: 'autocomplete',
           choices: [
             {
               name: 'Yes',
@@ -182,12 +182,12 @@ function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
   const cacheableOperations = Object.keys(allScripts).filter(
     (s) => s.indexOf('serve') === -1 && s.indexOf('start') === -1
   );
-  const targetDependencies = cacheableOperations
+  const targetDefaults = cacheableOperations
     .filter((c) => c === 'build' || c === 'prepare' || c === 'package')
     .reduce(
       (m, c) => ({
         ...m,
-        [c]: [{ target: c, projects: 'dependencies' }],
+        [c]: { dependsOn: [`^${c}`] },
       }),
       {}
     );
@@ -202,7 +202,7 @@ function createNxJsonFile(repoRoot: string, projects: ProjectDesc[]) {
         },
       },
     },
-    targetDependencies,
+    targetDefaults,
     affected: {
       defaultBase: deduceDefaultBase(),
     },
@@ -271,7 +271,9 @@ function runInstall(repoRoot: string) {
 
 function initCloud(repoRoot: string) {
   execSync(
-    `${getPackageManagerCommand(repoRoot).exec} nx g @nrwl/nx-cloud:init`,
+    `${
+      getPackageManagerCommand(repoRoot).exec
+    } nx g @nrwl/nx-cloud:init --installationSource=add-nx-to-monorepo`,
     {
       stdio: [0, 1, 2],
     }
@@ -316,7 +318,7 @@ function printFinalMessage(repoRoot) {
       `- Enabled Computation caching!`,
       `- Run "${
         getPackageManagerCommand(repoRoot).exec
-      } nx run-many --target=build --all" to run the build script for every project in the monorepo.`,
+      } nx run-many --target=build" to run the build script for every project in the monorepo.`,
       `- Run it again to replay the cached computation.`,
       `- Run "${
         getPackageManagerCommand(repoRoot).exec

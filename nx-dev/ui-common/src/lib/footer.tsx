@@ -4,7 +4,7 @@ import Link from 'next/link';
 export interface FooterProps {
   useDarkBackground?: boolean;
 }
-export function Footer({ useDarkBackground }: FooterProps) {
+export function Footer({ useDarkBackground }: FooterProps): JSX.Element {
   const navigation = {
     solutions: [
       { name: 'Nx', href: 'https://nx.dev' },
@@ -22,6 +22,10 @@ export function Footer({ useDarkBackground }: FooterProps) {
         href: 'https://nxplaybook.com/?utm_source=nx.dev',
       },
       { name: 'Nrwl', href: 'https://nrwl.io/?utm_source=nx.dev' },
+      {
+        name: 'Press kit',
+        href: 'https://nrwl.io/pages/brands?utm_source=nx.dev',
+      },
     ],
     community: [
       { name: 'Twitter', href: 'https://twitter.com/NXdevtools' },
@@ -285,5 +289,3 @@ export function Footer({ useDarkBackground }: FooterProps) {
     </footer>
   );
 }
-
-export default Footer;

@@ -1,6 +1,4 @@
-// ignoring while we support both Next 11.1.0 and versions before it
-// @ts-ignore
-import type { NextConfig } from 'next/dist/server/config';
+import type { NextConfig } from 'next';
 import type { WebpackConfigOptions } from '../src/utils/types';
 
 const { join } = require('path');
@@ -22,14 +20,15 @@ function regexEqual(x, y) {
   );
 }
 
-function withNx(nextConfig = {} as WithNxOptions) {
+export function withNx(nextConfig = {} as WithNxOptions) {
   const userWebpack = nextConfig.webpack || ((x) => x);
+  const { nx, ...validNextConfig } = nextConfig;
   return {
     eslint: {
       ignoreDuringBuilds: true,
-      ...(nextConfig.eslint ?? {}),
+      ...(validNextConfig.eslint ?? {}),
     },
-    ...nextConfig,
+    ...validNextConfig,
     webpack: (config, options) => {
       /*
        * Update babel to support our monorepo setup.
@@ -124,6 +123,48 @@ function withNx(nextConfig = {} as WithNxOptions) {
        */
       addNxEnvVariables(config);
 
+      /**
+       * 6. Add SVGR support if option is on.
+       */
+
+      // Default SVGR support to be on for projects.
+      if (nx.svgr !== false) {
+        config.module.rules.push({
+          test: /\.svg$/,
+          oneOf: [
+            // If coming from JS/TS file, then transform into React component using SVGR.
+            {
+              issuer: /\.[jt]sx?$/,
+              use: [
+                {
+                  loader: require.resolve('@svgr/webpack'),
+                  options: {
+                    svgo: false,
+                    titleProp: true,
+                    ref: true,
+                  },
+                },
+                {
+                  loader: require.resolve('url-loader'),
+                  options: {
+                    limit: 10000, // 10kB
+                    name: '[name].[hash:7].[ext]',
+                  },
+                },
+              ],
+            },
+            // Fallback to plain URL loader if someone just imports the SVG and references it on the <img src> tag
+            {
+              loader: require.resolve('url-loader'),
+              options: {
+                limit: 10000, // 10kB
+                name: '[name].[hash:7].[ext]',
+              },
+            },
+          ],
+        });
+      }
+
       return userWebpack(config, options);
     },
   };
@@ -155,4 +196,7 @@ function addNxEnvVariables(config: any) {
   }
 }
 
+// Support for older generated code: `const withNx = require('@nrwl/next/plugins/with-nx');`
 module.exports = withNx;
+// Support for newer generated code: `const { withNx } = require(...);`
+module.exports.withNx = withNx;

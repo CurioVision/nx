@@ -1,6 +1,9 @@
 # Angular Nx Tutorial - Step 7: Share Code
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/icyOSQ6gAm0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/icyOSQ6gAm0"
+title="Nx.dev Tutorial | Angular | Step 7: Share Code"
+width="100%" /%}
 
 Awesome! The application is working end to end! However, there is a problem. Both the backend and the frontend define the `Todo` interface. The interface is in sync now, but in a real application, over time, it will diverge, and, as a result, runtime errors will creep in. You should share this interface between the backend and the frontend. In Nx, you can do this by creating a library.
 
@@ -27,7 +30,7 @@ myorg/
 │       │   └── index.ts
 │       ├── .babelrc
 │       ├── .eslintrc.json
-│       ├── jest.config.js
+│       ├── jest.config.ts
 │       ├── project.json
 │       ├── README.md
 │       ├── tsconfig.json
@@ -50,7 +53,7 @@ export interface Todo {
 
 ### A note about VS Code :
 
-If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognized. This may need to be done **every time a new workspace library is added**. If you install the [Nx Console](/using-nx/console) extension you won't need to take this step.
+If you're using [VS Code](https://code.visualstudio.com/) it may be necessary at this point to restart the TS server so that the new `@myorg/data` package is recognized. This may need to be done **every time a new workspace library is added**. If you install the [Nx Console](/core-features/integrate-with-editors) extension you won't need to take this step.
 
 ## Refactor the API
 

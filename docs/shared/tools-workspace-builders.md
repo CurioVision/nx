@@ -1,4 +1,6 @@
-> In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/packages/nx-plugin) to simplify the build process.
+{% callout type="check" title="Local Nx plugins" %}
+In Nx 13.10+, local nx plugins can contain executors that are used in the workspace. When creating a custom executor for your workspace, look into the [nx-plugin guide](/packages/nx-plugin) to simplify the build process.
+{% /callout %}
 
 # Creating Custom Executors
 
@@ -212,7 +214,7 @@ export default async function multipleExecutor(
 
 For other ideas on how to create your own executors, you can always check out Nx's own open-source executors as well!
 
-(For example, our [cypress executor](https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts))
+{% github-repository url="https://github.com/nrwl/nx/blob/master/packages/cypress/src/executors/cypress/cypress.impl.ts" %}
 
 ## Using Custom Hashers
 
@@ -243,7 +245,7 @@ export const mimicNxHasher: CustomHasher = async (
   task: Task,
   context: HasherContext
 ) => {
-  return context.hasher.hashTaskWithDepsAndContext(task);
+  return context.hasher.hashTask(task);
 };
 
 export default mimicNxHasher;

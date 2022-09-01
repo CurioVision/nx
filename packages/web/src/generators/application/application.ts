@@ -206,6 +206,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],
+    unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
@@ -253,7 +254,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     ? `${names(options.directory).fileName}/${names(options.name).fileName}`
     : names(options.name).fileName;
 
-  const { appsDir, npmScope: defaultPrefix } = getWorkspaceLayout(host);
+  const { appsDir, npmScope } = getWorkspaceLayout(host);
 
   const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
@@ -272,7 +273,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    prefix: options.prefix ?? defaultPrefix,
+    prefix: options.prefix ?? npmScope,
     name: names(options.name).fileName,
     projectName: appProjectName,
     appProjectRoot,

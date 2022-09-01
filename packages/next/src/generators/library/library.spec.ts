@@ -1,10 +1,16 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import libraryGenerator from './library';
-import { Linter } from '@nrwl/linter';
+import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
 import { readJson } from '@nrwl/devkit';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
+import { Linter } from '@nrwl/linter';
+import libraryGenerator from './library';
 import { Schema } from './schema';
-
+// need to mock cypress otherwise it'll use the nx installed version from package.json
+//  which is v9 while we are testing for the new v10 version
+jest.mock('@nrwl/cypress/src/utils/cypress-version');
 describe('next library', () => {
+  let mockedInstalledCypressVersion: jest.Mock<
+    ReturnType<typeof installedCypressVersion>
+  > = installedCypressVersion as never;
   it('should use "@nrwl/next/babel" preset in babelrc', async () => {
     const baseOptions: Schema = {
       name: '',
@@ -16,7 +22,7 @@ describe('next library', () => {
       component: true,
     };
 
-    const appTree = createTreeWithEmptyWorkspace();
+    const appTree = createTreeWithEmptyV1Workspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
@@ -76,7 +82,7 @@ describe('next library', () => {
       style: 'css',
       component: true,
     };
-    const appTree = createTreeWithEmptyWorkspace();
+    const appTree = createTreeWithEmptyV1Workspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
@@ -106,7 +112,7 @@ describe('next library', () => {
       component: true,
     };
 
-    const appTree = createTreeWithEmptyWorkspace();
+    const appTree = createTreeWithEmptyV1Workspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,

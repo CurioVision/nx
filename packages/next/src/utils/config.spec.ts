@@ -1,11 +1,13 @@
 import { createWebpackConfig, prepareConfig } from './config';
 import { NextBuildBuilderOptions } from '@nrwl/next';
 import { dirname } from 'path';
-import { importConstants } from './require-shim';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 
-const { PHASE_PRODUCTION_BUILD } = importConstants();
+import { PHASE_PRODUCTION_BUILD } from './constants';
 
+jest.mock('@nrwl/web/src/utils/config', () => ({
+  createCopyPlugin: () => {},
+}));
 jest.mock('tsconfig-paths-webpack-plugin');
 jest.mock('next/dist/server/config', () => ({
   __esModule: true,
@@ -65,46 +67,12 @@ describe('Next.js webpack config builder', () => {
 
       // not much value in checking what they are
       // just check they get added
-      expect(config.module.rules.length).toBe(2);
-    });
-
-    it('should set svgr rule by default', () => {
-      const webpackConfig = createWebpackConfig('/root', 'apps/wibble', []);
-
-      const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
-        { defaultLoaders: {} }
-      );
-
-      const svgrRule = config.module.rules.find(
-        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
-      );
-      expect(svgrRule).toBeTruthy();
-    });
-
-    it('should not set svgr rule when its turned off', () => {
-      const webpackConfig = createWebpackConfig(
-        '/root',
-        'apps/wibble',
-        [],
-        undefined,
-        { svgr: false }
-      );
-
-      const config = webpackConfig(
-        { resolve: { alias: {} }, module: { rules: [] }, plugins: [] },
-        { defaultLoaders: {} }
-      );
-
-      const svgrRule = config.module.rules.find(
-        (rule) => rule !== '...' && rule.test.toString() === String(/\.svg$/)
-      );
-      expect(svgrRule).toBeFalsy();
+      expect(config.module.rules.length).toBe(1);
     });
   });
 
   describe('prepareConfig', () => {
-    it('should set the dist and out directories', async () => {
+    it('should set the dist directory', async () => {
       const config = await prepareConfig(
         PHASE_PRODUCTION_BUILD,
         {
@@ -120,7 +88,6 @@ describe('Next.js webpack config builder', () => {
       expect(config).toEqual(
         expect.objectContaining({
           distDir: '../../dist/apps/wibble/.next',
-          outdir: '../../dist/apps/wibble',
         })
       );
     });

@@ -1,23 +1,16 @@
-import { Menu } from '@nrwl/nx-dev/models-menu';
-import { Sidebar } from '@nrwl/nx-dev/ui-common';
+import { Breadcrumbs } from '@nrwl/nx-dev/ui-common';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { ReactComponentElement } from 'react';
 import Content from './content';
-import { getPublicPackageName } from './get-public-package-name';
 import { getSchemaViewModel, SchemaViewModel } from './get-schema-view-model';
 import { SchemaRequest } from './schema-request.models';
 
 export function PackageSchemaViewer({
   schemaRequest,
-  menu,
-  navIsOpen,
 }: {
   schemaRequest: SchemaRequest;
-  menu: Menu;
-  navIsOpen?: boolean;
-}): ReactComponentElement<any> {
+}): JSX.Element {
   const router = useRouter();
 
   const vm: {
@@ -27,9 +20,7 @@ export function PackageSchemaViewer({
     // Process the request and make available the needed schema information
     schema: getSchemaViewModel(router.query, schemaRequest),
     seo: {
-      title: `${getPublicPackageName(schemaRequest.pkg.name)}:${
-        schemaRequest.schemaName
-      } | Nx`,
+      title: `${schemaRequest.pkg.packageName}:${schemaRequest.schemaName} | Nx`,
       description:
         'Next generation build system with first class monorepo support and powerful integrations.',
       imageUrl: `https://nx.dev/images/open-graph/${router.asPath
@@ -74,14 +65,15 @@ export function PackageSchemaViewer({
       />
       <div className="mx-auto w-full max-w-screen-lg">
         <div className="lg:flex">
-          <Sidebar menu={menu} navIsOpen={navIsOpen} />
           <div
             id="content-wrapper"
             className={cx(
-              'w-full min-w-0 flex-auto flex-col pt-16 md:pl-4 lg:static lg:max-h-full lg:overflow-visible',
-              navIsOpen && 'fixed max-h-screen overflow-hidden'
+              'w-full min-w-0 flex-auto flex-col pt-16 md:px-4 lg:static lg:max-h-full lg:overflow-visible'
             )}
           >
+            <div className="mb-12 block w-full">
+              <Breadcrumbs path={router.asPath} />
+            </div>
             <Content schemaViewModel={vm.schema} />
           </div>
         </div>
@@ -89,5 +81,3 @@ export function PackageSchemaViewer({
     </>
   );
 }
-
-export default PackageSchemaViewer;

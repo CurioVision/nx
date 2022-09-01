@@ -7,6 +7,7 @@ import {
   removeSync,
   chmodSync,
 } from 'fs-extra';
+import type { Mode } from 'fs';
 import { logger } from '../utils/logger';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
@@ -20,7 +21,7 @@ export interface TreeWriteOptions {
    * The logical OR operator can be used to separate multiple permissions.
    * See https://nodejs.org/api/fs.html#fs_file_modes
    */
-  mode?: string | number;
+  mode?: Mode;
 }
 
 /**
@@ -90,7 +91,7 @@ export interface Tree {
    * @param mode The permission to be granted on the file, given as a string (e.g `755`) or octal integer (e.g `0o755`).
    * See https://nodejs.org/api/fs.html#fs_file_modes.
    */
-  changePermissions(filePath: string, mode: string | number): void;
+  changePermissions(filePath: string, mode: Mode): void;
 }
 
 /**
@@ -280,7 +281,7 @@ export class FsTree implements Tree {
     return res;
   }
 
-  changePermissions(filePath: string, mode: string | number): void {
+  changePermissions(filePath: string, mode: Mode): void {
     filePath = this.normalize(filePath);
     const filePathChangeKey = this.rp(filePath);
     if (this.recordedChanges[filePathChangeKey]) {
@@ -383,14 +384,17 @@ export function flushChanges(root: string, fileChanges: FileChange[]): void {
   });
 }
 
-export function printChanges(fileChanges: FileChange[]): void {
+export function printChanges(
+  fileChanges: FileChange[],
+  indent: string = ''
+): void {
   fileChanges.forEach((f) => {
     if (f.type === 'CREATE') {
-      console.log(`${chalk.green('CREATE')} ${f.path}`);
+      console.log(`${indent}${chalk.green('CREATE')} ${f.path}`);
     } else if (f.type === 'UPDATE') {
-      console.log(`${chalk.white('UPDATE')} ${f.path}`);
+      console.log(`${indent}${chalk.white('UPDATE')} ${f.path}`);
     } else if (f.type === 'DELETE') {
-      console.log(`${chalk.yellow('DELETE')} ${f.path}`);
+      console.log(`${indent}${chalk.yellow('DELETE')} ${f.path}`);
     }
   });
 }

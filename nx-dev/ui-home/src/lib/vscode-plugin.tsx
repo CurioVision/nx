@@ -1,10 +1,10 @@
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function VscodePlugin(): ReactComponentElement<any> {
+export function VscodePlugin(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -72,7 +72,7 @@ export function VscodePlugin(): ReactComponentElement<any> {
                 projects, construct commands, and much more.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="/using-nx/console">
+                <Link href="/core-features/integrate-with-editors">
                   <a
                     title="Get a better monorepo experience with Nx Console"
                     className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
@@ -107,5 +107,3 @@ export function VscodePlugin(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default VscodePlugin;

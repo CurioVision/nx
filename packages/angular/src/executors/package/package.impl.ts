@@ -1,5 +1,5 @@
 import type { ExecutorContext } from '@nrwl/devkit';
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
   checkDependentProjectsHaveBeenBuilt,
@@ -10,7 +10,6 @@ import {
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { from } from 'rxjs';
-import { eachValueFrom } from 'rxjs-for-await';
 import { mapTo, switchMap, tap } from 'rxjs/operators';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
@@ -68,7 +67,7 @@ export function createLibraryExecutor(
   ) {
     const { target, dependencies, topLevelDependencies } =
       calculateProjectDependencies(
-        readCachedProjectGraph(),
+        context.projectGraph,
         context.root,
         context.projectName,
         context.targetName,

@@ -6,13 +6,13 @@ import {
 } from '@nrwl/devkit';
 import { expressVersion } from '../../utils/versions';
 import initGenerator from './init';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 
 describe('init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
   });
 
   it('should add dependencies', async () => {
@@ -27,6 +27,8 @@ describe('init', () => {
     const packageJson = readJson(tree, 'package.json');
     // add express
     expect(packageJson.dependencies['express']).toBeDefined();
+    // add tslib
+    expect(packageJson.dependencies['tslib']).toBeDefined();
     // move `@nrwl/express` to dev
     expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
     expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();

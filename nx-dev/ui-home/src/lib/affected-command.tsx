@@ -1,10 +1,10 @@
 import { motion, useAnimation } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function AffectedCommand(): ReactComponentElement<any> {
+export function AffectedCommand(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -73,7 +73,7 @@ export function AffectedCommand(): ReactComponentElement<any> {
                 necessary.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="/using-nx/affected">
+                <Link href="/concepts/affected">
                   <a
                     title="Nx allows you to see what is affected by your changes"
                     className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
@@ -161,5 +161,3 @@ export function AffectedCommand(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default AffectedCommand;

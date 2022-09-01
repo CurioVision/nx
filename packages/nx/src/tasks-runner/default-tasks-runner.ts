@@ -37,6 +37,7 @@ export const defaultTasksRunner: TasksRunner<
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
+    hasher: Hasher;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
   if (
@@ -55,10 +56,6 @@ export const defaultTasksRunner: TasksRunner<
   options.lifeCycle.startCommand();
   try {
     return await runAllTasks(tasks, options, context);
-  } catch (e) {
-    console.error('Unexpected error:');
-    console.error(e);
-    process.exit(1);
   } finally {
     options.lifeCycle.endCommand();
   }
@@ -73,6 +70,7 @@ async function runAllTasks(
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph: TaskGraph;
+    hasher: Hasher;
   }
 ): Promise<{ [id: string]: TaskStatus }> {
   // TODO: vsavkin: remove this after Nx 16
@@ -85,10 +83,8 @@ async function runAllTasks(
     'task-graph-created'
   );
 
-  const hasher = new Hasher(context.projectGraph, context.nxJson, options);
-
   const orchestrator = new TaskOrchestrator(
-    hasher,
+    context.hasher,
     context.initiatingProject,
     context.projectGraph,
     context.taskGraph,

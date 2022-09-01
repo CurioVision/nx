@@ -79,6 +79,11 @@ function getServeConfig(options: NormalizedSchema): TargetConfiguration {
     options: {
       buildTarget: `${options.name}:build`,
     },
+    configurations: {
+      production: {
+        buildTarget: `${options.name}:build:production`,
+      },
+    },
   };
 }
 
@@ -182,6 +187,7 @@ export async function addLintingToApplication(
     eslintFilePatterns: [
       `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
     ],
+    unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
   });

@@ -8,7 +8,10 @@ import Script from 'next/script';
 import { useEffect } from 'react';
 import '../styles/main.css';
 
-export default function CustomApp({ Component, pageProps }: AppProps) {
+export default function CustomApp({
+  Component,
+  pageProps,
+}: AppProps): JSX.Element {
   const router = useRouter();
   const gaMeasurementId = 'UA-88380372-10';
   useEffect(() => {
@@ -84,13 +87,13 @@ export default function CustomApp({ Component, pageProps }: AppProps) {
       {/* HubSpot Analytics */}
       <Script
         id="hs-script-loader"
-        strategy="lazyOnload"
+        strategy="worker"
         src="https://js.hs-scripts.com/2757427.js"
       />
       {/* Hotjar Analytics */}
       <Script
         id="hotjar-script-loader"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
           (function(h,o,t,j,a,r){

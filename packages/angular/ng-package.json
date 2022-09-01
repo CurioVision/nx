@@ -13,13 +13,15 @@
     "chokidar",
     "ignore",
     "jasmine-marbles",
+    "minimatch",
     "rxjs-for-await",
     "webpack-merge",
     "ts-node",
     "tsconfig-paths",
     "semver",
     "webpack",
-    "http-server"
+    "http-server",
+    "magic-string"
   ],
   "keepLifecycleScripts": true
 }

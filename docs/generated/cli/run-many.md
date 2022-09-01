@@ -13,14 +13,14 @@ Run target for multiple listed projects
 nx run-many
 ```
 
-[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
 Test all projects:
 
 ```bash
-nx run-many --target=test --all
+nx run-many --target=test
 ```
 
 Test proj1 and proj2:
@@ -41,7 +41,9 @@ nx run-many --target=test --projects=proj1,proj2 --parallel=2
 
 Type: boolean
 
-Run the target on all projects in the workspace
+Default: true
+
+[deprecated] Run the target on all projects in the workspace
 
 ### configuration
 
@@ -131,7 +133,11 @@ Task to run for affected projects
 
 ### verbose
 
-Print additional error stack trace on failure
+Type: boolean
+
+Default: false
+
+Prints additional information about the commands (e.g., stack traces)
 
 ### version
 

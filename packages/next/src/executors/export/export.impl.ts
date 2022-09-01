@@ -7,22 +7,19 @@ import {
 } from '@nrwl/devkit';
 import exportApp from 'next/dist/export';
 import { join, resolve } from 'path';
+import {
+  calculateProjectDependencies,
+  DependentBuildableProjectNode,
+} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { workspaceLayout } from '@nrwl/devkit';
 
 import { prepareConfig } from '../../utils/config';
 import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
 } from '../../utils/types';
-import { readCachedProjectGraph } from '@nrwl/devkit';
-import {
-  calculateProjectDependencies,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { importConstants } from '../../utils/require-shim';
-import { workspaceLayout } from '@nrwl/devkit';
+import { PHASE_EXPORT } from '../../utils/constants';
 import nextTrace = require('next/dist/trace');
-
-const { PHASE_EXPORT } = importConstants();
 
 export default async function exportExecutor(
   options: NextExportBuilderOptions,
@@ -31,7 +28,7 @@ export default async function exportExecutor(
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
     const result = calculateProjectDependencies(
-      readCachedProjectGraph(),
+      context.projectGraph,
       context.root,
       context.projectName,
       'build', // this should be generalized

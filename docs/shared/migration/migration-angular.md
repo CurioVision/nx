@@ -4,7 +4,7 @@ Within an Nx workspace, you gain many capabilities that help you build applicati
 
 ## Prerequisites
 
-- The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to. For example, if you're using Angular CLI version 7, you must transition using the latest version 7 release of Nx.
+**The major version of your `Angular CLI` must align with the version of `Nx` you are upgrading to**. For example, if you're using Angular CLI version 7, you must transition using the latest version 7 release of Nx.
 
 ## Using the Nx CLI while preserving the existing structure
 
@@ -26,7 +26,7 @@ This installs the `@nrwl/angular` (or `@nrwl/workspace`) package into your works
 
 - Installs the `nx` and `@nrwl/workspace` packages.
 - Creates an `nx.json` file in the root of your workspace.
-- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/using-nx/caching).
+- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).
 
 After the process completes, you can continue using the same `serve/build/lint/test` commands you are used to.
 
@@ -148,8 +148,8 @@ Learn more about the advantages of Nx in the following guides:
 
 - [Using Cypress for e2e tests](/packages/cypress)
 - [Using Jest for unit tests](/packages/jest)
-- [Computation Caching](/using-nx/caching)
-- [Rebuilding and Retesting What is Affected](/using-nx/affected)
+- [Computation Caching](/concepts/how-caching-works)
+- [Rebuilding and Retesting What is Affected](/concepts/affected)
 
 ## Transitioning Manually
 
@@ -406,11 +406,14 @@ Learn more about the advantages of Nx in the following guides:
 
 [Using Cypress for e2e tests](/packages/cypress) \
 [Using Jest for unit tests](/packages/jest) \
-[Rebuilding and Retesting What is Affected](/using-nx/affected)
+[Rebuilding and Retesting What is Affected](/concepts/affected)
 
 ## From Nx Console
 
-<iframe loading="lazy" width="750" height="420" src="https://www.youtube.com/embed/vRj9SNVYKrE?rel=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/vRj9SNVYKrE"
+title="Nx Console Updates 17.15.0"
+width="100%" /%}
 
 As of Nx Console version 17.15.0, Angular CLI users will receive a notice periodically when running commands via Nx Console, asking if they want to use Nx to make their Angular commands faster.
 
@@ -422,7 +425,7 @@ The script will make the following changes:
   - If you opted into Nx Cloud, `@nrwl/nx-cloud` will be installed as well.
   - If your project's Angular version is greater than or equal to version 13, then the `@nrwl/angular` package will be installed as well.
 - Creates an `nx.json` file in the root of your workspace.
-- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/using-nx/caching).
+- Adds a `decorate-angular-cli.js` to the root of your workspace, and a `postinstall` script in your `package.json` to run the script when your dependencies are updated. The script forwards the `ng` commands to the Nx CLI (`nx`) to enable features such as [Computation Caching](/concepts/how-caching-works).
 
 By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.
 

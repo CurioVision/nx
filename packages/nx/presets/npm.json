@@ -1,10 +1,6 @@
 {
   "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
-    },
-    ".eslintrc.json": "*"
+    "package.json": "*"
   },
   "tasksRunnerOptions": {
     "default": {

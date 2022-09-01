@@ -2,7 +2,6 @@ import { Workspaces } from '../config/workspaces';
 
 import {
   calculateReverseDeps,
-  getCustomHasher,
   getExecutorForTask,
   getExecutorNameForTask,
   removeTasksFromTaskGraph,
@@ -11,6 +10,8 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { Hasher } from '../hasher/hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { hashTask } from '../hasher/hash-task';
 
 export interface Batch {
   executorName: string;
@@ -29,6 +30,7 @@ export class TasksSchedule {
 
   constructor(
     private readonly hasher: Hasher,
+    private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly workspaces: Workspaces,
@@ -81,12 +83,22 @@ export class TasksSchedule {
 
   private async scheduleTask(taskId: string) {
     const task = this.taskGraph.tasks[taskId];
-    await this.hashTask(task);
+
+    if (!task.hash) {
+      await hashTask(
+        this.workspaces,
+        this.hasher,
+        this.projectGraph,
+        this.taskGraph,
+        task
+      );
+    }
 
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
       [taskId]
     );
+    this.options.lifeCycle.scheduleTask(task);
     this.scheduledTasks.push(taskId);
   }
 
@@ -94,7 +106,11 @@ export class TasksSchedule {
     const batchMap: Record<string, TaskGraph> = {};
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
-      const executorName = getExecutorNameForTask(rootTask, this.workspaces);
+      const executorName = getExecutorNameForTask(
+        rootTask,
+        this.nxJson,
+        this.projectGraph
+      );
       this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
@@ -120,9 +136,15 @@ export class TasksSchedule {
   ) {
     const { batchImplementationFactory } = getExecutorForTask(
       task,
-      this.workspaces
+      this.workspaces,
+      this.projectGraph,
+      this.nxJson
     );
-    const executorName = getExecutorNameForTask(task, this.workspaces);
+    const executorName = getExecutorNameForTask(
+      task,
+      this.nxJson,
+      this.projectGraph
+    );
     if (rootExecutorName !== executorName) {
       return;
     }
@@ -155,19 +177,5 @@ export class TasksSchedule {
     return this.taskGraph.dependencies[taskId].every((id) =>
       this.completedTasks.has(id)
     );
-  }
-
-  private async hashTask(task: Task) {
-    const customHasher = getCustomHasher(task, this.workspaces);
-    const { value, details } = await (customHasher
-      ? customHasher(task, {
-          hasher: this.hasher,
-          projectGraph: this.projectGraph,
-          taskGraph: this.taskGraph,
-          workspaceConfig: this.workspaces.readWorkspaceConfiguration(),
-        })
-      : this.hasher.hashTaskWithDepsAndContext(task));
-    task.hash = value;
-    task.hashDetails = details;
   }
 }

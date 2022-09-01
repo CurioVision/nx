@@ -4,15 +4,10 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { join } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nrwl/devkit';
-import {
-  logger,
-  names,
-  readCachedProjectGraph,
-  readJsonFile,
-} from '@nrwl/devkit';
+import { logger, names, readJsonFile } from '@nrwl/devkit';
 import {
   calculateProjectDependencies,
   computeCompilerOptionsPaths,
@@ -36,21 +31,22 @@ import { updatePackageJson } from './lib/update-package-json';
 // These use require because the ES import isn't correct.
 const commonjs = require('@rollup/plugin-commonjs');
 const image = require('@rollup/plugin-image');
+
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
-
 export default async function* rollupExecutor(
   rawOptions: WebRollupOptions,
   context: ExecutorContext
 ) {
+  process.env.NODE_ENV ??= 'production';
+
   const project = context.workspace.projects[context.projectName];
-  const projectGraph = readCachedProjectGraph();
   const sourceRoot = project.sourceRoot;
   const { target, dependencies } = calculateProjectDependencies(
-    projectGraph,
+    context.projectGraph,
     context.root,
     context.projectName,
     context.targetName,
@@ -76,7 +72,7 @@ export default async function* rollupExecutor(
   }
   const packageJson = readJsonFile(options.project);
 
-  const npmDeps = (projectGraph.dependencies[context.projectName] ?? [])
+  const npmDeps = (context.projectGraph.dependencies[context.projectName] ?? [])
     .filter((d) => d.target.startsWith('npm:'))
     .map((d) => d.target.slice(4));
 
@@ -203,6 +199,7 @@ export function createRollupOptions(
         ),
       }),
       image(),
+      json(),
       useBabel &&
         require('rollup-plugin-typescript2')({
           check: true,
@@ -211,7 +208,6 @@ export function createRollupOptions(
             compilerOptions: createCompilerOptions(options, dependencies),
           },
         }),
-      useSwc && swc(),
       peerDepsExternal({
         packageJsonPath: options.project,
       }),
@@ -220,11 +216,17 @@ export function createRollupOptions(
         extract: options.extractCss,
         autoModules: true,
         plugins: [autoprefixer],
+        use: {
+          less: {
+            javascriptEnabled: options.javascriptEnabled,
+          },
+        },
       }),
       resolve({
         preferBuiltins: true,
         extensions: fileExtensions,
       }),
+      useSwc && swc(),
       useBabel &&
         getBabelInputPlugin({
           // Let's `@nrwl/web/babel` preset know that we are packaging.
@@ -251,7 +253,6 @@ export function createRollupOptions(
         }),
       commonjs(),
       analyze(),
-      json(),
     ];
 
     const globals = options.globals

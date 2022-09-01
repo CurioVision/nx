@@ -1,46 +1,48 @@
-import * as yargs from 'yargs';
 import { calculateFileChanges } from '../project-graph/file-utils';
 import { runCommand } from '../tasks-runner/run-command';
 import { output } from '../utils/output';
 import { generateGraph } from './dep-graph';
 import { printAffected } from './print-affected';
 import { connectToNxCloudUsingScan } from './connect-to-nx-cloud';
-import type { NxArgs, RawNxArgs } from '../utils/command-line-utils';
+import type { NxArgs } from '../utils/command-line-utils';
 import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../utils/command-line-utils';
 import { performance } from 'perf_hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { withDeps } from '../project-graph/operators';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { projectHasTarget } from '../utils/project-graph-utils';
 import { filterAffected } from '../project-graph/affected/affected-project-graph';
-import { readEnvironment } from './read-environment';
 import { TargetDependencyConfig } from 'nx/src/config/workspace-json-project-json';
+import { readNxJson } from '../config/configuration';
 
 export async function affected(
   command: 'apps' | 'libs' | 'graph' | 'print-affected' | 'affected',
-  parsedArgs: yargs.Arguments & RawNxArgs,
+  args: { [k: string]: any },
   extraTargetDependencies: Record<
     string,
     (TargetDependencyConfig | string)[]
   > = {}
 ): Promise<void> {
   performance.mark('command-execution-begins');
-  const env = readEnvironment();
+  const nxJson = readNxJson();
   const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-    parsedArgs,
+    args,
     'affected',
     {
-      printWarnings: command !== 'print-affected' && !parsedArgs.plain,
+      printWarnings: command !== 'print-affected' && !args.plain,
     },
-    env.nxJson
+    nxJson
   );
+
+  if (nxArgs.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
   await connectToNxCloudUsingScan(nxArgs.scan);
 
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projects = projectsToRun(nxArgs, projectGraph);
 
   try {
@@ -49,7 +51,7 @@ export async function affected(
         const apps = projects
           .filter((p) => p.type === 'app')
           .map((p) => p.name);
-        if (parsedArgs.plain) {
+        if (args.plain) {
           console.log(apps.join(' '));
         } else {
           if (apps.length) {
@@ -69,7 +71,7 @@ export async function affected(
         const libs = projects
           .filter((p) => p.type === 'lib')
           .map((p) => p.name);
-        if (parsedArgs.plain) {
+        if (args.plain) {
           console.log(libs.join(' '));
         } else {
           if (libs.length) {
@@ -87,7 +89,7 @@ export async function affected(
 
       case 'graph':
         const projectNames = projects.map((p) => p.name);
-        await generateGraph(parsedArgs as any, projectNames);
+        await generateGraph(args as any, projectNames);
         break;
 
       case 'print-affected':
@@ -97,7 +99,7 @@ export async function affected(
             projectsWithTarget,
             projects,
             projectGraph,
-            env,
+            { nxJson },
             nxArgs,
             overrides
           );
@@ -106,7 +108,7 @@ export async function affected(
             [],
             projects,
             projectGraph,
-            env,
+            { nxJson },
             nxArgs,
             overrides
           );
@@ -118,17 +120,18 @@ export async function affected(
         await runCommand(
           projectsWithTarget,
           projectGraph,
-          env,
+          { nxJson },
           nxArgs,
           overrides,
           null,
-          extraTargetDependencies
+          extraTargetDependencies,
+          { excludeTaskDependencies: false }
         );
         break;
       }
     }
   } catch (e) {
-    printError(e, parsedArgs.verbose);
+    printError(e, args.verbose);
     process.exit(1);
   }
 }
@@ -147,12 +150,6 @@ function projectsToRun(
           nxArgs
         )
       );
-  if (!nxArgs.all && nxArgs.withDeps) {
-    affectedGraph = withDeps(
-      projectGraph,
-      Object.values(affectedGraph.nodes) as ProjectGraphProjectNode[]
-    );
-  }
 
   if (nxArgs.exclude) {
     const excludedProjects = new Set(nxArgs.exclude);

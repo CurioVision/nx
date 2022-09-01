@@ -1,16 +1,13 @@
 import 'dotenv/config';
 import { ExecutorContext } from '@nrwl/devkit';
-
-import { readCachedProjectGraph } from '@nrwl/devkit';
+import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
 import {
   calculateProjectDependencies,
-  checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
 } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
 import { getRootTsConfigPath } from '@nrwl/workspace/src/utilities/typescript';
 
 import { map, tap } from 'rxjs/operators';
-import { eachValueFrom } from 'rxjs-for-await';
 import { resolve } from 'path';
 import { register } from 'ts-node';
 
@@ -50,10 +47,9 @@ export async function* webpackExecutor(
     registerTsNode();
   }
 
-  const projGraph = readCachedProjectGraph();
   if (!options.buildLibsFromSource) {
     const { target, dependencies } = calculateProjectDependencies(
-      projGraph,
+      context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,
@@ -65,17 +61,11 @@ export async function* webpackExecutor(
       target.data.root,
       dependencies
     );
+  }
 
-    if (
-      !checkDependentProjectsHaveBeenBuilt(
-        context.root,
-        context.projectName,
-        context.targetName,
-        dependencies
-      )
-    ) {
-      return { success: false } as any;
-    }
+  // Delete output path before bundling
+  if (options.deleteOutputPath) {
+    deleteOutputDir(context.root, options.outputPath);
   }
 
   // Delete output path before bundling
@@ -90,7 +80,9 @@ export async function* webpackExecutor(
         configuration: context.configurationName,
       });
     },
-    Promise.resolve(getNodeWebpackConfig(context, projGraph, options))
+    Promise.resolve(
+      getNodeWebpackConfig(context, context.projectGraph, options)
+    )
   );
 
   return yield* eachValueFrom(

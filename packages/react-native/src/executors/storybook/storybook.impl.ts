@@ -32,12 +32,18 @@ export default async function* reactNatievStorybookExecutor(
         context.projectName,
         projectRoot,
         context.root,
-        '@storybook/addon-ondevice-actions,@storybook/addon-ondevice-backgrounds,@storybook/addon-ondevice-controls,@storybook/addon-ondevice-notes'
+        context.projectGraph,
+        [
+          '@storybook/addon-ondevice-actions',
+          '@storybook/addon-ondevice-backgrounds',
+          '@storybook/addon-ondevice-controls',
+          '@storybook/addon-ondevice-notes',
+        ]
       )
     );
 
   try {
-    await runCliStorybook(context.root, projectRoot, options);
+    await runCliStorybook(context.root, options);
     yield { success: true };
   } finally {
     if (childProcess) {
@@ -48,7 +54,6 @@ export default async function* reactNatievStorybookExecutor(
 
 function runCliStorybook(
   workspaceRoot: string,
-  projectRoot: string,
   options: ReactNativeStorybookOptions
 ) {
   return new Promise((resolve, reject) => {
@@ -87,8 +92,12 @@ function createStorybookOptions(options) {
       if (v === true) {
         acc.push(`--${k}`);
       }
+    } else if (Array.isArray(v)) {
+      v.forEach((value) => {
+        acc.push(`--${k}`, value);
+      });
     } else {
-      acc.push(`--${k}`, options[k]);
+      acc.push(`--${k}`, v);
     }
     return acc;
   }, []);

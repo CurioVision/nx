@@ -10,7 +10,7 @@ describe('splitArgs', () => {
           base: 'sha1',
           head: 'sha2',
           notNxArg: true,
-          _: ['--override'],
+          override: true,
           $0: '',
         },
         'affected',
@@ -80,7 +80,7 @@ describe('splitArgs', () => {
       splitArgsIntoNxArgsAndOverrides(
         {
           notNxArg: true,
-          _: ['--override'],
+          _: ['affecteda', '--override'],
           $0: '',
         },
         'affected',
@@ -99,7 +99,7 @@ describe('splitArgs', () => {
         {
           files: [''],
           notNxArg: true,
-          _: ['--override'],
+          __positional_overrides__: [],
           $0: '',
         },
         'affected',
@@ -107,33 +107,63 @@ describe('splitArgs', () => {
         {} as any
       ).overrides
     ).toEqual({
+      __overrides_unparsed__: ['--notNxArg=true'],
       notNxArg: true,
-      override: true,
     });
   });
 
-  it('should set base and head in the affected mode', () => {
-    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-      {
-        notNxArg: true,
-        _: ['affected', '--name', 'bob', 'sha1', 'sha2', '--override'],
-        $0: '',
-      },
-      'affected',
-      {} as any,
-      {} as any
-    );
-
-    expect(nxArgs).toEqual({
-      base: 'sha1',
-      head: 'sha2',
-      skipNxCache: false,
-    });
-    expect(overrides).toEqual({
+  it('should split non nx specific arguments into target args (with positonal args)', () => {
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          files: [''],
+          notNxArg: true,
+          __positional_overrides__: ['positional'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      ).overrides
+    ).toEqual({
+      _: ['positional'],
+      __overrides_unparsed__: ['positional', '--notNxArg=true'],
       notNxArg: true,
-      override: true,
-      name: 'bob',
     });
+  });
+
+  it('should only use explicitly provided overrides', () => {
+    expect(
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          files: [''],
+          notNxArg: true,
+          _: ['explicit'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      ).overrides
+    ).toEqual({
+      __overrides_unparsed__: ['explicit'],
+      _: ['explicit'],
+    });
+  });
+
+  it('should throw when base and head are set as positional args', () => {
+    expect(() =>
+      splitArgsIntoNxArgsAndOverrides(
+        {
+          notNxArg: true,
+          __positional_overrides__: ['sha1', 'sha2'],
+          $0: '',
+        },
+        'affected',
+        {} as any,
+        {} as any
+      )
+    ).toThrow();
   });
 
   it('should set base and head based on environment variables in affected mode, if they are not provided directly on the command', () => {
@@ -198,27 +228,6 @@ describe('splitArgs', () => {
     // Reset process data
     process.env.NX_BASE = originalNxBase;
     process.env.NX_HEAD = originalNxHead;
-  });
-
-  it('should not set base and head in the run-one mode', () => {
-    const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-      {
-        notNxArg: true,
-        _: ['--exclude=file'],
-        $0: '',
-      },
-      'run-one',
-      {} as any,
-      {} as any
-    );
-
-    expect(nxArgs).toEqual({
-      skipNxCache: false,
-    });
-    expect(overrides).toEqual({
-      notNxArg: true,
-      exclude: 'file',
-    });
   });
 
   describe('--parallel', () => {

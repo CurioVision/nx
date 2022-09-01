@@ -16,10 +16,6 @@ describe('Node Build Executor', () => {
   let options: BuildNodeBuilderOptions;
 
   beforeEach(async () => {
-    jest
-      .spyOn(projectGraph, 'readCachedProjectGraph')
-      .mockReturnValue({} as ProjectGraph);
-
     (<any>runWebpack).mockReturnValue(of({ hasErrors: () => false }));
     context = {
       root: '/root',
@@ -36,6 +32,7 @@ describe('Node Build Executor', () => {
         },
         npmScope: 'test',
       },
+      projectGraph: {} as ProjectGraph,
       isVerbose: false,
     };
     options = {
@@ -80,6 +77,27 @@ describe('Node Build Executor', () => {
           libraryTarget: 'commonjs',
           path: '/root/dist/apps/wibble',
         }),
+      })
+    );
+  });
+
+  it('should use watchOptions if passed in', async () => {
+    await webpackExecutor(
+      {
+        ...options,
+        watchOptions: {
+          ignored: ['path1'],
+        },
+      },
+      context
+    ).next();
+
+    expect(runWebpack).toHaveBeenCalledWith(
+      expect.objectContaining({
+        watchOptions: {
+          ignored: ['path1'],
+          aggregateTimeout: 200,
+        },
       })
     );
   });

@@ -135,8 +135,10 @@ It only uses language primitives and immutable objects
 - [createProjectGraphAsync](../../devkit/index#createprojectgraphasync)
 - [defaultTasksRunner](../../devkit/index#defaulttasksrunner)
 - [detectPackageManager](../../devkit/index#detectpackagemanager)
+- [detectWorkspaceScope](../../devkit/index#detectworkspacescope)
 - [formatFiles](../../devkit/index#formatfiles)
 - [generateFiles](../../devkit/index#generatefiles)
+- [getImportPath](../../devkit/index#getimportpath)
 - [getOutputsForTargetAndConfiguration](../../devkit/index#getoutputsfortargetandconfiguration)
 - [getPackageManagerCommand](../../devkit/index#getpackagemanagercommand)
 - [getPackageManagerVersion](../../devkit/index#getpackagemanagerversion)
@@ -899,7 +901,7 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ### createProjectGraphAsync
 
-▸ **createProjectGraphAsync**(): `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
+▸ **createProjectGraphAsync**(`opts?`): `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
 
 Computes and returns a ProjectGraph.
 
@@ -923,6 +925,13 @@ Tip: If you want to debug project graph creation, run your command with NX_DAEMO
 Nx uses two layers of caching: the information about explicit dependencies stored on the disk and the information
 stored in the daemon process. To reset both run: `nx reset`.
 
+#### Parameters
+
+| Name               | Type      |
+| :----------------- | :-------- |
+| `opts`             | `Object`  |
+| `opts.exitOnError` | `boolean` |
+
 #### Returns
 
 `Promise`<[`ProjectGraph`](../../devkit/index#projectgraph)\>
@@ -940,6 +949,8 @@ stored in the daemon process. To reset both run: `nx reset`.
 | `tasks`                      | [`Task`](../../devkit/index#task)[]                                                   |
 | `options`                    | [`DefaultTasksRunnerOptions`](../../devkit/index#defaulttasksrunneroptions)           |
 | `context?`                   | `Object`                                                                              |
+| `context.daemon?`            | `DaemonClient`                                                                        |
+| `context.hasher?`            | [`Hasher`](../../devkit/index#hasher)                                                 |
 | `context.initiatingProject?` | `string`                                                                              |
 | `context.nxArgs`             | `NxArgs`                                                                              |
 | `context.nxJson`             | [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)<`string`[] \| `"*"`\> |
@@ -968,6 +979,24 @@ Detects which package manager is used in the workspace based on the lock file.
 #### Returns
 
 [`PackageManager`](../../devkit/index#packagemanager)
+
+---
+
+### detectWorkspaceScope
+
+▸ **detectWorkspaceScope**(`packageName`): `string`
+
+Detect workspace scope from the package.json name
+
+#### Parameters
+
+| Name          | Type     |
+| :------------ | :------- |
+| `packageName` | `string` |
+
+#### Returns
+
+`string`
 
 ---
 
@@ -1027,6 +1056,25 @@ doesn't get confused about incorrect TypeScript files.
 #### Returns
 
 `void`
+
+---
+
+### getImportPath
+
+▸ **getImportPath**(`npmScope`, `projectDirectory`): `string`
+
+Prefixes project name with npm scope
+
+#### Parameters
+
+| Name               | Type     |
+| :----------------- | :------- |
+| `npmScope`         | `string` |
+| `projectDirectory` | `string` |
+
+#### Returns
+
+`string`
 
 ---
 
@@ -1375,6 +1423,8 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ▸ **readAllWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
 
+**`deprecated`** Use readProjectsConfigurationFromProjectGraph(await createProjectGraphAsync())
+
 #### Returns
 
 [`ProjectsConfigurations`](../../devkit/index#projectsconfigurations) & [`NxJsonConfiguration`](../../devkit/index#nxjsonconfiguration)
@@ -1383,7 +1433,7 @@ parseTargetString('proj:test:production'); // returns { project: "proj", target:
 
 ### readCachedProjectGraph
 
-▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/index#projectgraph)
+▸ **readCachedProjectGraph**(): [`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
 
 Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
@@ -1391,7 +1441,7 @@ Synchronously reads the latest cached copy of the workspace's ProjectGraph.
 
 #### Returns
 
-[`ProjectGraph`](../../devkit/index#projectgraph)
+[`ProjectGraph`](../../devkit/index#projectgraph)<[`ProjectConfiguration`](../../devkit/index#projectconfiguration)\>
 
 ---
 
@@ -1605,7 +1655,7 @@ B will depend on A.
 
 ### runExecutor
 
-▸ **runExecutor**<`T`\>(`targetDescription`, `options`, `context`): `Promise`<`AsyncIterableIterator`<`T`\>\>
+▸ **runExecutor**<`T`\>(`targetDescription`, `overrides`, `context`): `Promise`<`AsyncIterableIterator`<`T`\>\>
 
 Loads and invokes executor.
 
@@ -1649,7 +1699,7 @@ Note that the return value is a promise of an iterator, so you need to await bef
 | `targetDescription.configuration?` | `string`                                                |
 | `targetDescription.project`        | `string`                                                |
 | `targetDescription.target`         | `string`                                                |
-| `options`                          | `Object`                                                |
+| `overrides`                        | `Object`                                                |
 | `context`                          | [`ExecutorContext`](../../devkit/index#executorcontext) |
 
 #### Returns

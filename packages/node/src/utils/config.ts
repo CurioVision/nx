@@ -102,7 +102,6 @@ export function getBaseWebpackPartial(
         // For watch mode, type errors should result in failure.
         async: false,
         typescript: {
-          enabled: true,
           configFile: options.tsConfig,
           memoryLimit: options.memoryLimit || 2018,
         },
@@ -114,6 +113,7 @@ export function getBaseWebpackPartial(
       // two builds on a single file change.
       aggregateTimeout: 200,
       poll: options.poll,
+      ...options.watchOptions,
     },
     stats: getStatsConfig(options),
     experiments: {

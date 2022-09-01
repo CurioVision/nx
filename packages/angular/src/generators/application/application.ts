@@ -12,14 +12,16 @@ import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   addE2e,
   addLinting,
-  addMfe,
+  addMf,
   addProxyConfig,
   addRouterRootConfiguration,
   addUnitTestRunner,
+  convertToStandaloneApp,
   createFiles,
   enableStrictTypeChecking,
   normalizeOptions,
   setApplicationStrictDefault,
+  setDefaultProject,
   updateAppComponentTemplate,
   updateComponentSpec,
   updateConfigFiles,
@@ -83,6 +85,7 @@ export async function applicationGenerator(
     flat: true,
     viewEncapsulation: 'None',
     project: options.name,
+    standalone: options.standalone,
   });
   updateNxComponentTemplate(host, options);
 
@@ -107,6 +110,10 @@ export async function applicationGenerator(
   await addE2e(host, options);
   updateEditorTsConfig(host, options);
 
+  if (!options.skipDefaultProject) {
+    setDefaultProject(host, options);
+  }
+
   if (options.backendProject) {
     addProxyConfig(host, options);
   }
@@ -124,8 +131,12 @@ export async function applicationGenerator(
     });
   }
 
-  if (options.mfe) {
-    await addMfe(host, options);
+  if (options.standalone) {
+    convertToStandaloneApp(host, options);
+  }
+
+  if (options.mf) {
+    await addMf(host, options);
   }
 
   if (!options.skipFormat) {

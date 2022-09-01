@@ -167,7 +167,9 @@ export async function generateGraph(
   },
   affectedProjects: string[]
 ): Promise<void> {
-  let graph = pruneExternalNodes(await createProjectGraphAsync());
+  let graph = pruneExternalNodes(
+    await createProjectGraphAsync({ exitOnError: true })
+  );
   const layout = workspaceLayout();
 
   const projects = Object.values(graph.nodes) as ProjectGraphProjectNode[];
@@ -203,10 +205,7 @@ export async function generateGraph(
     }
   }
 
-  let html = readFileSync(
-    join(__dirname, '../core/dep-graph/index.html'),
-    'utf-8'
-  );
+  let html = readFileSync(join(__dirname, '../core/graph/index.html'), 'utf-8');
 
   graph = filterGraph(graph, args.focus || null, args.exclude || []);
 
@@ -221,7 +220,7 @@ export async function generateGraph(
     if (ext === '.html') {
       const assetsFolder = join(fileFolderPath, 'static');
       const assets: string[] = [];
-      copySync(join(__dirname, '../core/dep-graph'), assetsFolder, {
+      copySync(join(__dirname, '../core/graph'), assetsFolder, {
         filter: (_src, dest) => {
           const isntHtml = !/index\.html/.test(dest);
           if (isntHtml && dest.includes('.')) {
@@ -344,7 +343,7 @@ async function startServer(
       return;
     }
 
-    let pathname = join(__dirname, '../core/dep-graph/', sanitizePath);
+    let pathname = join(__dirname, '../core/graph/', sanitizePath);
 
     if (!existsSync(pathname)) {
       // if the file is not found, return 404
@@ -477,7 +476,9 @@ async function createDepGraphClientResponse(
   performance.mark('project graph watch calculation:start');
   await defaultFileHasher.init();
 
-  let graph = pruneExternalNodes(await createProjectGraphAsync());
+  let graph = pruneExternalNodes(
+    await createProjectGraphAsync({ exitOnError: true })
+  );
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 

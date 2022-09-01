@@ -32,7 +32,7 @@
           {
             "input": "packages/jest",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
@@ -73,7 +73,11 @@
           "packages/jest/**/*.spec.jsx",
           "packages/jest/**/*.d.ts",
           "packages/jest/**/executors/**/schema.json",
-          "packages/jest/**/generators/**/schema.json"
+          "packages/jest/**/generators/**/schema.json",
+          "packages/jest/generators.json",
+          "packages/jest/executors.json",
+          "packages/jest/package.json",
+          "packages/jest/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

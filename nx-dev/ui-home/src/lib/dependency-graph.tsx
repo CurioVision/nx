@@ -1,9 +1,9 @@
 import { motion, useAnimation } from 'framer-motion';
 import Link from 'next/link';
-import { ReactComponentElement, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
-export function DependencyGraph(): ReactComponentElement<any> {
+export function DependencyGraph(): JSX.Element {
   const opacityTranslateXVariant = {
     hidden: {
       opacity: 0,
@@ -70,7 +70,7 @@ export function DependencyGraph(): ReactComponentElement<any> {
                 and understand your workspace.
               </motion.p>
               <motion.div variants={opacityVariant} className="mt-6">
-                <Link href="/structure/dependency-graph">
+                <Link href="/core-features/explore-graph">
                   <a
                     title="Nx graph tool to visally interact with monorepo dependencies"
                     className="bg-blue-nx-base hover:bg-blue-nx-dark inline-flex rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm transition"
@@ -107,5 +107,3 @@ export function DependencyGraph(): ReactComponentElement<any> {
     </article>
   );
 }
-
-export default DependencyGraph;

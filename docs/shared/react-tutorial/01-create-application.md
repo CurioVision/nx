@@ -1,12 +1,34 @@
 # React Nx Tutorial - Step 1: Create Application
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/HcQE5R6ucng" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/HcQE5R6ucng"
+title="Nx.dev Tutorial | React | Step 1: Create Application"
+width="100%" /%}
 
 In this tutorial you use Nx to build a full-stack application out of common libraries using modern technologies.
 
-> Next.js: Nx also has first-class Next.js support. Read more about it [here](/next/overview)
+{% callout type="check" title="Nx has first-class Next.js support" %}
+Nx has first-class Next.js support, if you are looking to try or use it for your project. Read more about it [here](/packages/next)
+{% /callout %}
 
-> This tutorial uses several Nx plugins to provide a rich dev experience. **All the plugins are optional.** [Read about using Nx Core without plugins](/getting-started/nx-core).
+{% callout type="note" title="Plugins for a rich developer experience" %}
+In this tutorial, we use several Nx plugins to provide a rich developer experience that do most of the work for you. **All the plugins are optional.**
+{% /callout %}
+
+## Contents
+
+- [1 - Create Application](/react-tutorial/01-create-application)
+- [2 - Add E2E Test](/react-tutorial/02-add-e2e-test)
+- [3 - Display Todos](/react-tutorial/03-display-todos)
+- [4 - Connect to API](/react-tutorial/04-connect-to-api)
+- [5 - Add Node Application](/react-tutorial/05-add-node-app)
+- [6 - Proxy Configuration](/react-tutorial/06-proxy)
+- [7 - Share Code](/react-tutorial/07-share-code)
+- [8 - Create Libraries](/react-tutorial/08-create-libs)
+- [9 - Project Graph](/react-tutorial/09-dep-graph)
+- [10 - Use Computation Caching](/react-tutorial/10-computation-caching)
+- [11 - Test Affected Projects](/react-tutorial/11-test-affected-projects)
+- [12 - Summary](/react-tutorial/12-summary)
 
 ## Create a new workspace
 
@@ -45,7 +67,7 @@ myorg/
 │   │   ├── .babelrc
 │   │   ├── .browserslistrc
 │   │   ├── .eslintrc.json
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── project.json
 │   │   ├── tsconfig.app.json
 │   │   ├── tsconfig.json
@@ -54,16 +76,14 @@ myorg/
 │       ├── src/
 │       │   ├── fixtures/
 │       │   │   └── example.json
-│       │   ├── integration/
-│       │   │   └── app.spec.ts
-│       │   ├── plugins/
-│       │   │   └── index.js
+│       │   ├── e2e/
+│       │   │   └── app.cy.ts
 │       │   └── support/
 │       │       ├── app.po.ts
 │       │       ├── commands.ts
-│       │       └── index.ts
+│       │       └── e2e.ts
 │       ├── .eslintrc.json
-│       ├── cypress.json
+│       ├── cypress.config.ts
 │       ├── project.json
 │       └── tsconfig.json
 ├── libs/
@@ -71,7 +91,7 @@ myorg/
 ├── .eslintrc.json
 ├── .prettierrc
 ├── babel.config.json
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package.json
@@ -95,7 +115,7 @@ npx nx serve todos
 
 ## Note on the Nx CLI
 
-If you would prefer to run using a global installation of Nx, you can run:
+If you prefer to run using a global installation of Nx, you can run:
 
 ```bash
 nx serve todos
@@ -105,27 +125,41 @@ Depending on how your dev env is set up, the command above might result in `Comm
 
 To fix it, you can either install the `nx` cli globally by running:
 
-```bash
-npm install -g nx
-```
-
-or
+{% tabs %}
+{% tab label="yarn" %}
 
 ```bash
 yarn global add nx
 ```
 
+{% /tab %}
+{% tab label="npm" %}
+
+```bash
+npm install -g nx
+```
+
+{% /tab %}
+{% /tabs %}
+
 Alternatively, you can run the local installation of Nx by prepending every command with `npx`:
+
+{% tabs %}
+{% tab label="yarn" %}
+
+```bash
+yarn nx serve todos
+```
+
+{% /tab %}
+{% tab label="npm" %}
 
 ```bash
 npx nx serve todos
 ```
 
-or
-
-```bash
-yarn nx serve todos
-```
+{% /tab %}
+{% /tabs %}
 
 ## What's Next
 

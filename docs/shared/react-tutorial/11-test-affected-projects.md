@@ -1,6 +1,9 @@
 # React Nx Tutorial - Step 11: Test Affected Projects
 
-<iframe loading="lazy" width="560" height="315" src="https://www.youtube.com/embed/_mBBFRjs01g" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"></iframe>
+{% youtube
+src="https://www.youtube.com/embed/_mBBFRjs01g"
+title="Nx.dev Tutorial | React | Step 11: Test Affected Projects"
+width="100%" /%}
 
 In addition to supporting computation caching, Nx scales your development by doing code change analysis to see what is affected by a particular pull request.
 
@@ -35,9 +38,9 @@ export function Todos(props: TodosProps) {
 export default Todos;
 ```
 
-**Run `npx nx affected:apps`**, and you should see `todos` printed out. The `affected:apps` looks at what you have changed and uses the project graph to figure out which apps can be affected by this change.
+**Run `npx nx print-affected --type=app --select=projects`**, and you should see `todos` printed out. The `print-affected` looks at what you have changed and uses the project graph to figure out which apps can be affected by this change.
 
-**Run `npx nx affected:libs`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
+**Run `npx nx print-affected --type=lib --select=projects`**, and you should see `ui` printed out. This command works similarly, but instead of printing the affected apps, it prints the affected libs.
 
 ## Test Affected Projects
 

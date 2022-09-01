@@ -1,4 +1,4 @@
-import { Tree, names, getWorkspaceLayout } from '@nrwl/devkit';
+import { names, Tree } from '@nrwl/devkit';
 import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
 import * as ts from 'typescript';
 import {
@@ -6,14 +6,17 @@ import {
   addRoute,
 } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
+import { addStandaloneRoute } from '../../../utils/nx-devkit/standalone-utils';
 
-export function addChildren(host: Tree, options: NormalizedSchema) {
-  if (!host.exists(options.parentModule)) {
+export function addChildren(tree: Tree, options: NormalizedSchema) {
+  if (!tree.exists(options.parentModule)) {
     throw new Error(`Cannot find '${options.parentModule}'`);
   }
 
-  const moduleSource = host.read(options.parentModule, 'utf-8');
-  const constName = `${names(options.fileName).propertyName}Routes`;
+  const moduleSource = tree.read(options.parentModule, 'utf-8');
+  const constName = options.standalone
+    ? `${names(options.name).className.toUpperCase()}_ROUTES`
+    : `${names(options.fileName).propertyName}Routes`;
   const importPath = options.importPath;
   let sourceFile = ts.createSourceFile(
     options.parentModule,
@@ -22,23 +25,37 @@ export function addChildren(host: Tree, options: NormalizedSchema) {
     true
   );
 
-  sourceFile = addImportToModule(
-    host,
-    sourceFile,
-    options.parentModule,
-    options.moduleName
-  );
-  sourceFile = addRoute(
-    host,
-    options.parentModule,
-    sourceFile,
-    `{ path: '${names(options.fileName).fileName}', children: ${constName} }`
-  );
+  if (!options.standalone) {
+    sourceFile = addImportToModule(
+      tree,
+      sourceFile,
+      options.parentModule,
+      options.moduleName
+    );
+  }
+
   sourceFile = insertImport(
-    host,
+    tree,
     sourceFile,
     options.parentModule,
-    `${options.moduleName}, ${constName}`,
+    options.standalone ? constName : `${options.moduleName}, ${constName}`,
     importPath
   );
+
+  const route = `{ path: '${
+    names(options.fileName).fileName
+  }', children: ${constName} }`;
+
+  if (moduleSource.includes('@NgModule')) {
+    sourceFile = addRoute(tree, options.parentModule, sourceFile, route);
+  } else {
+    addStandaloneRoute(
+      tree,
+      options.parentModule,
+      route,
+      false,
+      constName,
+      importPath
+    );
+  }
 }

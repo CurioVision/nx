@@ -4,14 +4,15 @@ import {
   readProjectConfiguration,
   readJson,
   getProjects,
+  joinPathFragments,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { e2eProjectGenerator } from './e2e';
 
 describe('NxPlugin e2e-project Generator', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
 
     // add a plugin project to the workspace for validations
     addProjectConfiguration(tree, 'my-plugin', {
@@ -146,5 +147,24 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
     expect(tree.exists('apps/my-plugin-e2e/jest.config.ts')).toBeTruthy();
+  });
+
+  it('should not generate tests when minimal flag is passed', async () => {
+    // ARRANGE & ACT
+    await e2eProjectGenerator(tree, {
+      pluginName: 'my-plugin',
+      pluginOutputPath: `dist/libs/my-plugin`,
+      npmPackageName: '@proj/my-plugin',
+      standaloneConfig: false,
+      minimal: true,
+    });
+
+    const { root } = readProjectConfiguration(tree, 'my-plugin-e2e');
+
+    // ASSERT
+
+    expect(
+      tree.read(joinPathFragments(root, 'tests/my-plugin.spec.ts'), 'utf-8')
+    ).not.toContain("it('should create ");
   });
 });

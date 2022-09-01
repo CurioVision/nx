@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  formatFiles,
   GeneratorCallback,
   readProjectConfiguration,
   Tree,
@@ -8,6 +9,7 @@ import {
 import { configurationGenerator } from '@nrwl/storybook';
 
 import storiesGenerator from '../stories/stories';
+import { addResolverMainFieldsToMetroConfig } from './lib/add-resolver-main-fields-to-metro-config';
 import { createStorybookFiles } from './lib/create-storybook-files';
 import { replaceAppImportWithStorybookToggle } from './lib/replace-app-import-with-storybook-toggle';
 
@@ -16,6 +18,7 @@ import { StorybookConfigureSchema } from './schema';
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {
     project: schema.name,
+    ignorePaths: schema.ignorePaths,
   });
 }
 
@@ -30,16 +33,19 @@ export async function storybookConfigurationGenerator(
     js: false,
     linter: schema.linter,
     standaloneConfig: schema.standaloneConfig,
+    tsConfiguration: schema.tsConfiguration,
   });
 
   addStorybookTask(host, schema.name);
   createStorybookFiles(host, schema);
   replaceAppImportWithStorybookToggle(host, schema);
+  addResolverMainFieldsToMetroConfig(host, schema);
 
   if (schema.generateStories) {
     await generateStories(host, schema);
   }
 
+  await formatFiles(host);
   return installTask;
 }
 
@@ -48,7 +54,7 @@ function addStorybookTask(host: Tree, projectName: string) {
   projectConfig.targets['storybook'] = {
     executor: '@nrwl/react-native:storybook',
     options: {
-      searchDir: projectConfig.root,
+      searchDir: [projectConfig.root],
       outputFile: './.storybook/story-loader.js',
       pattern: '**/*.stories.@(js|jsx|ts|tsx|md)',
       silent: false,

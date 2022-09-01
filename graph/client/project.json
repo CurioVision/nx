@@ -1,0 +1,138 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "graph/client/src",
+  "projectType": "application",
+  "targets": {
+    "build-base": {
+      "executor": "@nrwl/web:webpack",
+      "options": {
+        "maxWorkers": 8,
+        "outputPath": "build/apps/graph",
+        "index": "graph/client/src/index.html",
+        "main": "graph/client/src/main.tsx",
+        "polyfills": "graph/client/src/polyfills.ts",
+        "tsConfig": "graph/client/tsconfig.app.json",
+        "styles": ["graph/client/src/styles.scss"],
+        "scripts": [],
+        "assets": [],
+        "webpackConfig": "graph/client/webpack.config.js",
+        "optimization": false,
+        "outputHashing": "none",
+        "sourceMap": true,
+        "extractCss": true,
+        "namedChunks": false,
+        "extractLicenses": false,
+        "vendorChunk": true,
+        "budgets": [
+          {
+            "type": "initial",
+            "maximumWarning": "2mb",
+            "maximumError": "5mb"
+          }
+        ]
+      },
+      "configurations": {
+        "dev": {
+          "assets": [
+            "graph/client/src/favicon.ico",
+            "graph/client/src/assets/graphs/",
+            {
+              "input": "graph/client/src/assets/dev",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ]
+        },
+        "nx-console": {
+          "assets": [
+            "graph/client/src/favicon.ico",
+            {
+              "input": "graph/client/src/assets/graphs",
+              "output": "/assets/graphs",
+              "glob": "nx-examples.json"
+            },
+            {
+              "input": "graph/client/src/assets/nx-console",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ]
+        },
+        "release": {
+          "assets": [
+            "graph/client/src/favicon.ico",
+            {
+              "input": "graph/client/src/assets/graphs",
+              "output": "/assets/graphs",
+              "glob": "nx-examples.json"
+            },
+            {
+              "input": "graph/client/src/assets/release",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ],
+          "optimization": true,
+          "sourceMap": false,
+          "extractCss": true,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "5mb"
+            }
+          ]
+        },
+        "watch": {
+          "assets": [
+            "graph/client/src/favicon.ico",
+            {
+              "input": "graph/client/src/assets/watch",
+              "output": "/",
+              "glob": "environment.js"
+            }
+          ]
+        }
+      },
+      "defaultConfiguration": "release",
+      "outputs": ["{options.outputPath}"]
+    },
+    "serve": {
+      "executor": "@nrwl/web:dev-server",
+      "configurations": {
+        "dev": {
+          "buildTarget": "graph-client:build-base:dev"
+        },
+        "nx-console": {
+          "buildTarget": "graph-client:build-base:nx-console"
+        },
+        "release": {
+          "buildTarget": "graph-client:build-base:release"
+        },
+        "watch": {
+          "buildTarget": "graph-client:build-base:watch"
+        }
+      },
+      "defaultConfiguration": "dev"
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["graph/client/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/graph/client"],
+      "options": {
+        "jestConfig": "graph/client/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

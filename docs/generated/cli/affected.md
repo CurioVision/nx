@@ -13,7 +13,7 @@ Run target for affected projects
 nx affected
 ```
 
-[Install `nx` globally](/getting-started/nx-setup#install-nx) to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
+Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpx nx`.
 
 ### Examples
 
@@ -173,7 +173,11 @@ Untracked changes
 
 ### verbose
 
-Print additional error stack trace on failure
+Type: boolean
+
+Default: false
+
+Prints additional information about the commands (e.g., stack traces)
 
 ### version
 

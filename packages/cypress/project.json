@@ -32,7 +32,7 @@
           {
             "input": "packages/cypress",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
@@ -73,7 +73,11 @@
           "packages/cypress/**/*.spec.jsx",
           "packages/cypress/**/*.d.ts",
           "packages/cypress/**/executors/**/schema.json",
-          "packages/cypress/**/generators/**/schema.json"
+          "packages/cypress/**/generators/**/schema.json",
+          "packages/cypress/generators.json",
+          "packages/cypress/executors.json",
+          "packages/cypress/package.json",
+          "packages/cypress/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

@@ -1,5 +1,5 @@
 import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { Linter } from '@nrwl/linter';
 import { addLinting } from './add-linting';
 import { addProject } from './add-project';
@@ -8,15 +8,18 @@ describe('Add Linting', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace();
+    tree = createTreeWithEmptyV1Workspace();
     addProject(tree, {
       name: 'my-app-e2e',
       projectName: 'my-app-e2e',
+      projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
       project: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
+      appDisplayName: 'MyApp',
       linter: Linter.EsLint,
+      framework: 'react-native',
     });
   });
 
@@ -24,11 +27,14 @@ describe('Add Linting', () => {
     addLinting(tree, {
       name: 'my-app-e2e',
       projectName: 'my-app-e2e',
+      projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
       project: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
+      appDisplayName: 'MyApp',
       linter: Linter.EsLint,
+      framework: 'react-native',
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 
@@ -40,11 +46,14 @@ describe('Add Linting', () => {
     addLinting(tree, {
       name: 'my-app-e2e',
       projectName: 'my-app-e2e',
+      projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
       project: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
+      appDisplayName: 'MyApp',
       linter: Linter.TsLint,
+      framework: 'react-native',
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 
@@ -58,11 +67,14 @@ describe('Add Linting', () => {
     addLinting(tree, {
       name: 'my-app-e2e',
       projectName: 'my-app-e2e',
+      projectDirectory: 'apps',
       projectRoot: 'apps/my-app-e2e',
       project: 'my-app',
       appFileName: 'my-app',
       appClassName: 'MyApp',
+      appDisplayName: 'MyApp',
       linter: Linter.None,
+      framework: 'react-native',
     });
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 

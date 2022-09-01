@@ -10,6 +10,11 @@
     "url": "https://github.com/codebrewlab/nx-plugins/tree/main/packages/nx-aws-cdk"
   },
   {
+    "name": "@ago-dev/nx-aws-cdk-v2",
+    "description": "An nx plugin for the aws-cdk v2.",
+    "url": "https://github.com/adrian-goe/nx-aws-cdk-v2"
+  },
+  {
     "name": "@rxap/plugin-localazy",
     "description": "An Nx plugin for localazy.com upload and download tasks.",
     "url": "https://gitlab.com/rxap/plugins/-/tree/master/libs/localazy"
@@ -273,5 +278,30 @@
     "name": "@ndrsg/nx-http",
     "description": "Plugin with executors, which can perform http-stuff (e.g. requests, webhooks, file up/downloads, ...)",
     "url": "https://github.com/ndrsg/nx-ext/tree/main/packages/nx-http"
+  },
+  {
+    "name": "@diogovcs/graphql-mesh",
+    "description": "Nx plugin to add GraphQL Mesh integration to Nx Workspace.",
+    "url": "https://github.com/DiogoVCS/nx-graphql-mesh"
+  },
+  {
+    "name": "@computas/nx-yarn",
+    "description": "A plugin to help make nx with yarn a pleasant experience.",
+    "url": "https://github.com/computas/nx-yarn"
+  },
+  {
+    "name": "@theunderscorer/nx-semantic-release",
+    "description": "Nx plugin for automated releases using semantic-release.",
+    "url": "https://github.com/TheUnderScorer/nx-semantic-release"
+  },
+  {
+    "name": "nx-pwm",
+    "description": "Nx plugin and CLI to help maintain packages, inspired by NX repo tooling",
+    "url": "https://github.com/gioragutt/nx-pwm"
+  },
+  {
+    "name": "@nxrocks/nx-micronaut",
+    "description": "Nx plugin to generate, run, package, build (and more) Micronaut projects inside your Nx workspace",
+    "url": "https://github.com/tinesoft/nxrocks/tree/master/packages/nx-micronaut"
   }
 ]

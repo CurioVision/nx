@@ -7,5 +7,7 @@ export interface StorybookConfigurationOptions {
   linter: Exclude<Linter, Linter.TsLint>;
   name: string;
   cypressDirectory?: string;
-  projectBuildConfig?: string;
+  tsConfiguration?: boolean;
+  skipFormat?: boolean;
+  ignorePaths?: string[];
 }

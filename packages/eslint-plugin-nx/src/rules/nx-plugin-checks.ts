@@ -1,11 +1,14 @@
 import type { AST } from 'jsonc-eslint-parser';
 import type { TSESLint } from '@typescript-eslint/utils';
 
-import { readJsonFile, workspaceRoot } from '@nrwl/devkit';
+import {
+  ProjectGraphProjectNode,
+  readJsonFile,
+  workspaceRoot,
+} from '@nrwl/devkit';
 import {
   findSourceProject,
   getSourceFilePath,
-  MappedProjectGraphNode,
 } from '@nrwl/workspace/src/utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from 'nx/src/utils/register';
@@ -21,14 +24,16 @@ type Options = [
     executorsJson?: string;
     migrationsJson?: string;
     packageJson?: string;
+    allowedVersionStrings: string[];
   }
 ];
 
-const DEFAULT_OPTIONS = {
+const DEFAULT_OPTIONS: Options[0] = {
   generatorsJson: 'generators.json',
   executorsJson: 'executors.json',
   migrationsJson: 'migrations.json',
   packageJson: 'package.json',
+  allowedVersionStrings: ['*', 'latest', 'next'],
 };
 
 export type MessageIds =
@@ -94,9 +99,10 @@ export default createESLintRule<Options, MessageIds>({
     if (!sourceProject) {
       return {};
     }
-
+    const options = normalizeOptions(sourceProject, context.options[0]);
+    context.options[0] = options;
     const { generatorsJson, executorsJson, migrationsJson, packageJson } =
-      normalizeOptions(sourceProject, context.options[0]);
+      options;
 
     if (
       ![generatorsJson, executorsJson, migrationsJson, packageJson].includes(
@@ -130,11 +136,12 @@ export default createESLintRule<Options, MessageIds>({
 });
 
 function normalizeOptions(
-  sourceProject: MappedProjectGraphNode<{}>,
+  sourceProject: ProjectGraphProjectNode<{}>,
   options: Options[0]
 ): Options[0] {
   const base = { ...DEFAULT_OPTIONS, ...options };
   return {
+    ...base,
     executorsJson: base.executorsJson
       ? `${sourceProject.data.root}/${base.executorsJson}`
       : undefined,
@@ -437,7 +444,9 @@ export function validatePackageGroup(
         const key = (packageNode?.value as AST.JSONLiteral)?.value ?? 'unknown';
 
         if (versionPropertyNode) {
-          if (!validateVersionJsonExpression(versionPropertyNode.value))
+          if (
+            !validateVersionJsonExpression(versionPropertyNode.value, context)
+          )
             context.report({
               messageId: 'invalidVersion',
               data: { key },
@@ -456,7 +465,7 @@ export function validatePackageGroup(
       const properties = packageGroupNode.value.properties;
       // For each property, ensure its value is a valid version
       for (const propertyNode of properties) {
-        if (!validateVersionJsonExpression(propertyNode.value)) {
+        if (!validateVersionJsonExpression(propertyNode.value, context)) {
           context.report({
             messageId: 'invalidVersion',
             data: {
@@ -470,11 +479,15 @@ export function validatePackageGroup(
   }
 }
 
-export function validateVersionJsonExpression(node: AST.JSONExpression) {
+export function validateVersionJsonExpression(
+  node: AST.JSONExpression,
+  context: TSESLint.RuleContext<MessageIds, Options>
+) {
   return (
     node &&
     node.type === 'JSONLiteral' &&
     typeof node.value === 'string' &&
-    valid(node.value)
+    (valid(node.value) ||
+      context.options[0]?.allowedVersionStrings.includes(node.value))
   );
 }

@@ -2,7 +2,7 @@
 
 ![React Logo](/shared/react-logo.png)
 
-Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/detox/overview), Storybook, Jest, and more.
+Nx provides a holistic dev experience powered by an advanced CLI and editor plugins. It provides rich support for common tools like [Detox](/packages/detox), Storybook, Jest, and more.
 
 In this guide we will show you how to develop [React Native](https://reactnative.dev/) applications with Nx.
 
@@ -16,7 +16,9 @@ npx create-nx-workspace happynrwl \
 --appName=mobile
 ```
 
-**Note:** You can also run the command without arguments to go through the interactive prompts.
+{% callout type="note" title="Don't know what you need?" %}
+You can also run the command without arguments to go through the interactive prompts.
+{% /callout %}
 
 ```bash
 npx create-nx-workspace happynrwl
@@ -49,7 +51,7 @@ happynrwl/
 │   │   │       ├── App.tsx
 │   │   │       └── App.spec.tsx
 │   │   ├── .babelrc
-│   │   ├── jest.config.js
+│   │   ├── jest.config.ts
 │   │   ├── test-setup.ts
 │   │   ├── package.json
 │   │   ├── project.json
@@ -68,7 +70,7 @@ happynrwl/
 ├── libs/
 ├── tools/
 ├── babel.config.json
-├── jest.config.js
+├── jest.config.ts
 ├── jest.preset.js
 ├── nx.json
 ├── package-lock.json
@@ -77,7 +79,19 @@ happynrwl/
 └── workspace.json
 ```
 
-Run `npx nx run-android mobile` to run the applicatoin in development mode on Android simulator/device. Run `npx nx run-ios mobile` to run the applicatoin in developement mode on iOS simulator/device.
+To run the application in development mode:
+
+On Android simulator/device:
+
+```bash
+npx nx run-android mobile
+```
+
+iOS simulator/device:
+
+```bash
+npx nx run-ios mobile
+```
 
 Try out other commands as well.
 
@@ -90,7 +104,7 @@ Try out other commands as well.
 
 **Android:**
 
-```sh
+```bash
 npx nx build-android mobile
 ```
 
@@ -102,13 +116,13 @@ No CLI support yet. Run in the Xcode project. See: https://reactnative.dev/docs/
 
 **Android:**
 
-```sh
+```bash
 npx nx test-android mobile-e2e
 ```
 
 **iOS:** (Mac only)
 
-```sh
+```bash
 npx nx test-ios mobile-e2e
 ```
 
@@ -141,8 +155,8 @@ Nx allows you to create libraries with just one command. Some reasons you might 
 - Publish a package to be used outside the monorepo
 - Better visualize the architecture using `npx nx graph`
 
-For more information on Nx libraries, see our documentation on [Creating Libraries](/structure/creating-libraries)
-and [Library Types](/structure/library-types).
+For more information on Nx libraries, see our documentation on [Creating Libraries](/more-concepts/creating-libraries)
+and [Library Types](/more-concepts/library-types).
 
 To generate a new library run:
 
@@ -185,7 +199,7 @@ Run:
 - `npx nx test shared-ui-layout` to test the library
 - `npx nx lint shared-ui-layout` to lint the library
 
-To generate a new comopnent inside `shared-ui-layout` run:
+To generate a new component inside `shared-ui-layout` run:
 
 ```bash
 npx nx g @nrwl/react-native:component layout --project=shared-ui-layout --export

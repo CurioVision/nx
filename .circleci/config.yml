@@ -4,7 +4,7 @@ version: 2.1
 #        ORBS
 # -------------------------
 orbs:
-  nx: nrwl/nx@1.4.0
+  nx: nrwl/nx@1.5.1
   node: circleci/node@5.0.2
 
 # -------------------------
@@ -38,6 +38,7 @@ executors:
     <<: *defaults
     docker:
       - image: cimg/node:lts-browsers
+    resource_class: medium+
 
   macos:
     <<: *defaults
@@ -100,7 +101,12 @@ commands:
                 paths:
                   - /usr/local/Homebrew
                   - ~/Library/Caches/Homebrew
-
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                command: sudo apt-get install -y ca-certificates
       - run-yarn-install:
           os: << parameters.os >>
       - when:
@@ -152,7 +158,6 @@ jobs:
   main-linux:
     executor: linux
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_VERBOSE_LOGGING: 'false'
     steps:
@@ -164,46 +169,41 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud record yarn check-imports
-      - run: npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx-cloud record yarn check-commit
-      - run: npx nx-cloud record yarn depcheck
+      - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
           command: npx nx-cloud record yarn documentation
           no_output_timeout: 20m
       - run:
-          name: Run Lint/Test/Build
+          name: Run Checks/Lint/Test/Build
+          no_output_timeout: 60m
           command: |
             pids=()
 
-            npx nx-cloud record yarn nx workspace-lint &
+            (npx nx-cloud record yarn check-imports &&
+            npx nx-cloud record yarn nx format:check --base=$NX_BASE --head=$NX_HEAD &&
+            npx nx-cloud record yarn check-commit &&
+            npx nx-cloud record yarn check-lock-files &&
+            npx nx-cloud record yarn nx workspace-lint &&
+            npx nx-cloud record yarn depcheck) &
+            pids+=($!)
+
+            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 && 
+            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular,e2e-react-native,e2e-detox,e2e-make-angular-cli-faster --parallel=1) &
             pids+=($!)
             yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
             yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
             pids+=($!)
-            yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
-      - run:
-          name: Run E2E Tests
-          command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-react-native,e2e-detox --parallel=1
-          no_output_timeout: 45m
-      - run:
-          name: Stop All Running Agents for This CI Run
-          command: npx nx-cloud stop-all-agents
-
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
   mainmacos:
     executor: macos
     environment:
-      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
     steps:
       - run:
@@ -215,13 +215,25 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run:
+          name: Check if "detox" or "react-native" were modified directly
+          command: |
+            COUNT=`git diff --name-only $NX_BASE $NX_HEAD | (grep -E 'packages/detox|packages/react-native|e2e/detox|e2e/react-native' || true) | wc -l`
+            if [[ $COUNT -gt 0 ]]; then
+              echo "React Native and Detox were touched directly"
+              echo "export E2E_AFFECTED=true;" >> $BASH_ENV
+            else
+              echo "React Native and Detox were not touched directly"
+              echo "export E2E_AFFECTED=false;" >> $BASH_ENV
+            fi
+      - run:
           name: Run E2E Tests
           command: |
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-workspace-integrations,e2e-workspace-core,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-cli,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init --parallel=1
+            if $E2E_AFFECTED; then
+              npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-make-angular-cli-faster,e2e-detox,e2e-js,e2e-next,e2e-workspace-create,e2e-nx-run,e2e-nx-misc,e2e-react,e2e-web,e2e-angular-extensions,e2e-angular-core,e2e-nx-plugin,e2e-cypress,e2e-node,e2e-linter,e2e-jest,e2e-add-nx-to-monorepo,nx-dev-e2e,e2e-nx-init,e2e-graph-client --parallel=1;
+            else
+              echo "Skipping E2E tests";
+            fi
           no_output_timeout: 45m
-      - run:
-          name: Stop All Running Agents for This CI Run
-          command: npx nx-cloud stop-all-agents
 
 # -------------------------
 #        WORKFLOWS(JOBS)
@@ -247,14 +259,6 @@ workflows:
           name: 'agent7'
       - agent:
           name: 'agent8'
-      - agent:
-          name: 'agent9'
-          pm: 'npm'
-          os: 'macos'
-      - agent:
-          name: 'agent10'
-          pm: 'npm'
-          os: 'macos'
       - main-linux
       - mainmacos:
           name: main-macos-e2e

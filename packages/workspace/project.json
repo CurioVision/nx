@@ -33,7 +33,7 @@
           {
             "input": "packages/workspace",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "project.json"],
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
             "output": "/"
           },
           {
@@ -67,7 +67,7 @@
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/copy-dep-graph.js"
+            "command": "node ./scripts/copy-graph-client.js"
           },
           {
             "command": "node ./scripts/copy-readme.js workspace"
@@ -99,7 +99,11 @@
           "packages/workspace/**/*.spec.jsx",
           "packages/workspace/**/*.d.ts",
           "packages/workspace/**/executors/**/schema.json",
-          "packages/workspace/**/generators/**/schema.json"
+          "packages/workspace/**/generators/**/schema.json",
+          "packages/workspace/generators.json",
+          "packages/workspace/executors.json",
+          "packages/workspace/package.json",
+          "packages/workspace/migrations.json"
         ]
       },
       "outputs": ["{options.outputFile}"]

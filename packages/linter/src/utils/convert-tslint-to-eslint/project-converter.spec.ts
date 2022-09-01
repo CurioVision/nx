@@ -7,13 +7,23 @@ import {
   Tree,
   writeJson,
 } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyV1Workspace } from '@nrwl/devkit/testing';
 import { ProjectConverter } from './project-converter';
 
 /**
  * Don't run actual child_process implementation of installPackagesTask()
  */
-jest.mock('child_process');
+jest.mock('child_process', () => {
+  return {
+    ...jest.requireActual<any>('child_process'),
+    execSync: jest.fn((command: string) => {
+      if (command.includes('yarn --version')) {
+        return '1.22.0';
+      }
+      return;
+    }),
+  };
+});
 
 /**
  * Don't run the conversion util, it touches the file system and has its own tests
@@ -47,7 +57,7 @@ describe('ProjectConverter', () => {
     process.argv = process.argv.filter(
       (a) => !['--dry-run', '--dryRun', '-d'].includes(a)
     );
-    host = createTreeWithEmptyWorkspace();
+    host = createTreeWithEmptyV1Workspace();
     addProjectConfiguration(host, projectName, {
       root: projectRoot,
       projectType: 'application',

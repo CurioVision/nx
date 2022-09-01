@@ -1,19 +1,5 @@
 # Configuring CI Using GitLab and Nx
 
-Nx is a smart, fast and extensible build system, and it works really well with monorepos. Monorepos provide a lot of advantages:
-
-- Everything at that current commit works together. Changes can be verified across all affected parts of the organization.
-- Easy to split code into composable modules
-- Easier dependency management
-- One toolchain setup
-- Code editors and IDEs are "workspace" aware
-- Consistent developer experience
-- And more ...
-
-But they come with their own technical challenges. The more code you add into your repository, the slower the CI gets.
-
-## Setting Gitlab CI/CD
-
 Below is an example of a GitLab pipeline setup for an Nx workspace only building and testing what is affected.
 
 ```yaml
@@ -73,13 +59,84 @@ build:
     - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
 ```
 
-The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep
-CI configuration file more readable.
+The `build` and `test` jobs implement the CI workflow using `.distributed` as template to keep CI configuration file more readable.
+
+{% nx-cloud-section %}
 
 ## Distributed CI with Nx Cloud
 
-A computation cache is created on your local machine to make the developer experience faster. This allows you to not waste time re-building, re-testing, re-linting, or any number of other actions you might take on code that hasn't changed. Because the cache is stored locally, you are the only member of your team that can take advantage of these instant commands. You can manage and share this cache manually.
+In order to use distributed task execution, we need to start agents and set the `NX_CLOUD_DISTRIBUTED_EXECUTION` flag to `true`.
 
-Nx Cloud allows this cache to be shared across your entire organization, meaning that any cacheable operation completed on your workspace only needs to be run once. Nx Cloud also allows you to distribute your CI across multiple machines to make sure the CI is fast even for very large repos.
+Read more about the [Distributed CI setup with Nx Cloud](/recipes/ci-setup#distributed-ci-with-nx-cloud).
 
-Learn more about [configuring your CI](https://nx.app/docs/configuring-ci) environment using Nx Cloud with [Distributed Caching](https://nx.app/docs/distributed-caching) and [Distributed Task Execution](https://nx.app/docs/distributed-execution) in the Nx Cloud docs.
+```yaml
+image: node:18
+variables:
+  CI: 'true'
+  NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+
+# Creating template for DTE agents
+.dte-agent:
+  interruptible: true
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - '.yarn-cache/'
+  script:
+    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - yarn nx-cloud start-agent
+  artifacts:
+    expire_in: 5 days
+    paths:
+      - dist
+
+# Creating template for a job running DTE (orchestrator)
+.base-pipeline:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  cache:
+    key:
+      files:
+        - yarn.lock
+    paths:
+      - '.yarn-cache/'
+  before_script:
+    - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+  artifacts:
+    expire_in: 5 days
+    paths:
+      - node_modules/.cache/nx
+
+# Main job running DTE
+nx-dte:
+  stage: affected
+  extends: .base-pipeline
+  script:
+    - yarn nx-cloud start-ci-run
+    - yarn nx-cloud record -- yarn nx workspace-lint --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - yarn nx-cloud stop-all-agents
+
+# Create as many agents as you want
+nx-dte-agent1:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent2:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent3:
+  extends: .dte-agent
+  stage: affected
+```
+
+{% /nx-cloud-section %}

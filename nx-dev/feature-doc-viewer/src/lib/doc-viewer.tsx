@@ -4,8 +4,7 @@ import { Sidebar } from '@nrwl/nx-dev/ui-common';
 import cx from 'classnames';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
-import { ReactComponentElement } from 'react';
-import Content from './content';
+import { Content } from './content';
 
 export interface DocumentationFeatureDocViewerProps {
   menu: Menu;
@@ -18,17 +17,22 @@ export function DocViewer({
   document,
   menu,
   navIsOpen,
-}: DocumentationFeatureDocViewerProps): ReactComponentElement<any> {
+}: DocumentationFeatureDocViewerProps): JSX.Element {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
         title={document.data.title + ' | Nx'}
+        description={
+          document.data.description ??
+          'Next generation build system with first class monorepo support and powerful integrations.'
+        }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: document.data.title,
           description:
+            document.data.description ??
             'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
@@ -95,5 +99,3 @@ export function DocViewer({
     </>
   );
 }
-
-export default DocViewer;

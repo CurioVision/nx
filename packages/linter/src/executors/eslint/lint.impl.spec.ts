@@ -36,6 +36,8 @@ jest.mock('./utility/eslint-utils', () => {
 });
 import lintExecutor from './lint.impl';
 
+let mockChdir = jest.fn().mockImplementation(() => {});
+
 function createValidRunBuilderOptions(
   additionalOptions: Partial<Schema> = {}
 ): Schema {
@@ -57,6 +59,7 @@ function createValidRunBuilderOptions(
     hasTypeAwareRules: false,
     rulesdir: [],
     resolvePluginsRelativeTo: null,
+    reportUnusedDisableDirectives: null,
     ...additionalOptions,
   };
 }
@@ -64,7 +67,7 @@ function createValidRunBuilderOptions(
 function setupMocks() {
   jest.resetModules();
   jest.clearAllMocks();
-  jest.spyOn(process, 'chdir').mockImplementation(() => {});
+  jest.spyOn(process, 'chdir').mockImplementation(mockChdir);
   console.warn = jest.fn();
   console.error = jest.fn();
   console.info = jest.fn();
@@ -131,6 +134,7 @@ describe('Linter Builder', () => {
         maxWarnings: null,
         outputFile: null,
         quiet: false,
+        reportUnusedDisableDirectives: null,
       }),
       mockContext
     );
@@ -139,7 +143,7 @@ describe('Linter Builder', () => {
       eslintConfig: './.eslintrc.json',
       fix: true,
       cache: true,
-      cacheLocation: 'cacheLocation1',
+      cacheLocation: 'cacheLocation1/proj',
       cacheStrategy: 'content',
       format: 'stylish',
       force: false,
@@ -151,7 +155,17 @@ describe('Linter Builder', () => {
       noEslintrc: false,
       rulesdir: [],
       resolvePluginsRelativeTo: null,
+      reportUnusedDisableDirectives: null,
     });
+  });
+
+  it('should execute correctly from another working directory than root', async () => {
+    setupMocks();
+    await lintExecutor(createValidRunBuilderOptions(), {
+      ...mockContext,
+      cwd: 'apps/project/',
+    });
+    expect(mockChdir).toHaveBeenCalledWith('/root');
   });
 
   it('should throw if no reports generated', async () => {
@@ -218,6 +232,19 @@ describe('Linter Builder', () => {
       mockContext
     );
     expect(mockOutputFixes).toHaveBeenCalled();
+  });
+
+  it('should ignore any positional parameters', async () => {
+    setupMocks();
+    const result = lintExecutor(
+      createValidRunBuilderOptions({
+        eslintConfig: './.eslintrc.json',
+        lintFilePatterns: ['includedFile1'],
+        _: 'some-random-text',
+      }),
+      mockContext
+    );
+    await expect(result).resolves.not.toThrow();
   });
 
   describe('bundled results', () => {

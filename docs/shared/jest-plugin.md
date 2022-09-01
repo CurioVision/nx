@@ -100,7 +100,7 @@ Primary configurations for Jest will be via the `jest.config.js` file that gener
 
 ### Nx
 
-Nx Jest Plugin options can be configured via the [project config file](/configuration/projectjson) or via the [command line flags](/jest/jest).
+Nx Jest Plugin options can be configured via the [project config file](/reference/project-configuration) or via the [command line flags](/packages/jest).
 
 > Hint: Use `--help` to see all available options
 >
@@ -110,7 +110,7 @@ Nx Jest Plugin options can be configured via the [project config file](/configur
 
 ### Code Coverage
 
-Enable code coverage with the `--coverage` flag or by adding it to the executor options in the [project configuration file](/configuration/projectjson).
+Enable code coverage with the `--coverage` flag or by adding it to the executor options in the [project configuration file](/reference/project-configuration).
 
 By default, coverage reports will be generated in the `coverage/` directory under projects name. i.e. `coverage/apps/frontend`. Modify this directory with the `--coverageDirectory` flag. Coverage reporters can also be customized with the `--coverageReporters` flag.
 
@@ -146,4 +146,4 @@ Enter [chrome://inspect](chrome://inspect) in Chrome address bar and inspect the
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
-- [@nrwl/jest options](/jest/jest)
+- [@nrwl/jest options](/packages/jest)

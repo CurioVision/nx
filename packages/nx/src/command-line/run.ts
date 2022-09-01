@@ -20,6 +20,13 @@ import {
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../config/misc-interfaces';
+import { serializeOverridesIntoCommandLine } from 'nx/src/utils/serialize-overrides-into-command-line';
+import {
+  createProjectGraphAsync,
+  readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
+import { ProjectGraph } from '../config/project-graph';
 
 export interface Target {
   project: string;
@@ -123,10 +130,11 @@ async function runExecutorInternal<T extends { success: boolean }>(
     target: string;
     configuration?: string;
   },
-  options: { [k: string]: any },
+  overrides: { [k: string]: any },
   root: string,
   cwd: string,
   workspace: ProjectsConfigurations & NxJsonConfiguration,
+  projectGraph: ProjectGraph,
   isVerbose: boolean,
   printHelp: boolean
 ): Promise<AsyncIterableIterator<T>> {
@@ -164,7 +172,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
   }
 
   const combinedOptions = combineOptionsForExecutor(
-    options,
+    overrides,
     configuration,
     targetConfig,
     schema,
@@ -182,6 +190,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       projectName: project,
       targetName: target,
       configurationName: configuration,
+      projectGraph,
       cwd,
       isVerbose,
     }) as Promise<T> | AsyncIterableIterator<T>;
@@ -245,21 +254,25 @@ export async function runExecutor<T extends { success: boolean }>(
     target: string;
     configuration?: string;
   },
-  options: { [k: string]: any },
+  overrides: { [k: string]: any },
   context: ExecutorContext
 ): Promise<AsyncIterableIterator<T>> {
   return await runExecutorInternal<T>(
     targetDescription,
-    options,
+    {
+      ...overrides,
+      __overrides_unparsed__: serializeOverridesIntoCommandLine(overrides),
+    },
     context.root,
     context.cwd,
     context.workspace,
+    context.projectGraph,
     context.isVerbose,
     false
   );
 }
 
-export async function run(
+export function run(
   cwd: string,
   root: string,
   targetDescription: {
@@ -271,9 +284,9 @@ export async function run(
   isVerbose: boolean,
   isHelp: boolean
 ) {
-  const ws = new Workspaces(root);
+  const projectGraph = readCachedProjectGraph();
   return handleErrors(isVerbose, async () => {
-    const workspace = ws.readWorkspaceConfiguration();
+    const workspace = readProjectsConfigurationFromProjectGraph(projectGraph);
     return iteratorToProcessStatusCode(
       await runExecutorInternal(
         targetDescription,
@@ -281,6 +294,7 @@ export async function run(
         root,
         cwd,
         workspace,
+        projectGraph,
         isVerbose,
         isHelp
       )
